@@ -23,8 +23,8 @@ class GNN(AbstractGNN):
         """
         super(GNN, self).__init__(gnn_layer_cls, n_nodes, in_feats, hidden_channels, number_classes, dropout, device)
         self.embed = nn.Embedding(n_nodes, in_feats)
-        self.conv1 = gnn_layer_cls(in_feats, hidden_channels).to(device)
-        self.conv2 = gnn_layer_cls(hidden_channels, number_classes).to(device)
+        self.conv1 = gnn_layer_cls(in_feats, hidden_channels, add_self_loops=False).to(device)
+        self.conv2 = gnn_layer_cls(hidden_channels, number_classes, add_self_loops=False).to(device)
 
     def forward(self, graph_data: Data):
         """
@@ -37,12 +37,12 @@ class GNN(AbstractGNN):
         """
         # input step
         embed = self.embed(graph_data.x)
-        h = self.conv1(embed, graph_data.edge_attr)
+        h = self.conv1(x=embed, edge_index=graph_data.edge_index)
         h = torch.relu(h)
         h = F.dropout(h, p=self.dropout_frac)
 
         # output step
-        h = self.conv2(h, graph_data.edge_attr)
+        h = self.conv2(x=h, edge_index=graph_data.edge_index)
         h = torch.sigmoid(h)
 
         return h

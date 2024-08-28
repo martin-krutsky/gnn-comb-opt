@@ -50,10 +50,11 @@ def generate_graph(n: int, d: int = None, p: float = None, graph_type: str = 're
 
 
 def get_dataset(domain_name: str, data_size: int = 1, problem_size: int = 10, node_degree: int = 3, graph_type: str = 'reg',
-                dtype: torch.dtype = torch.float32, device: str = 'cpu') -> Dataset:
+                dtype: str = 'float32', device: str = 'cpu') -> Dataset:
     dataset_path = os.path.join(DATASET_DIR, f'{domain_name}.pkl')
     if not os.path.isfile(dataset_path):
         os.makedirs(DATASET_DIR, exist_ok=True)
+        dtype = getattr(torch, dtype)
 
         try:
             domain_cls: AbstractCODomain = getattr(domains, domain_name)
@@ -64,10 +65,11 @@ def get_dataset(domain_name: str, data_size: int = 1, problem_size: int = 10, no
         for i in range(data_size):
             nx_graph = generate_graph(n=problem_size, d=node_degree, graph_type=graph_type, random_seed=i)
             q_dict = domain_cls.gen_q_dict(nx_graph)
-            edge_index = qubo_dict_to_torch(nx_graph, q_dict, dtype, device)
-            data = Data(x=torch.range(1, problem_size, dtype=torch.int), edge_index=edge_index)
+            edge_index = qubo_dict_to_torch(nx_graph, q_dict, torch_dtype=torch.int64, torch_device=device)
+            data = Data(x=torch.range(0, problem_size-1, dtype=torch.int), edge_index=edge_index)
             data_list.append(data)
-        Dataset.save(data_list, dataset_path)
+        InMemoryDataset.save(data_list, dataset_path)
     dataset: Dataset = InMemoryDataset()
     dataset.load(dataset_path)
+    os.remove(dataset_path)
     return dataset
