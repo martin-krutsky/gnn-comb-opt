@@ -1,14 +1,13 @@
+from abc import ABC, abstractmethod
+
 import torch
-from torch import nn
-import torch.nn.functional as F
+import torch.nn as nn
 
 from torch_geometric.data import Data
 from torch_geometric.nn.conv import MessagePassing
 
-from models.abstract.abstract_gnn import AbstractGNN
 
-
-class GNN(AbstractGNN):
+class AbstractGNN(ABC, nn.Module):
     def __init__(self, gnn_layer_cls: MessagePassing, n_nodes: int, in_feats: int, hidden_channels: int,
                  number_classes: int, dropout: float, device: torch.device):
         """
@@ -21,11 +20,17 @@ class GNN(AbstractGNN):
             dropout: Fraction of dropout to add between intermediate layer. Value is cached for later use.
             device: Specifies device (CPU vs GPU) to load variables onto
         """
-        super(GNN, self).__init__(gnn_layer_cls, n_nodes, in_feats, hidden_channels, number_classes, dropout, device)
-        self.embed = nn.Embedding(n_nodes, in_feats)
-        self.conv1 = gnn_layer_cls(in_feats, hidden_channels).to(device)
-        self.conv2 = gnn_layer_cls(hidden_channels, number_classes).to(device)
+        super(AbstractGNN, self).__init__()
+        self.gnn_layer_cls = gnn_layer_cls
+        self.n_nodes = n_nodes
+        self.in_feats = in_feats
+        self.hidden_channels = hidden_channels
+        self.number_classes = number_classes
+        self.dropout_frac = dropout
+        self.device = device
 
+
+    @abstractmethod
     def forward(self, graph_data: Data):
         """
         Run forward propagation step of instantiated model.
@@ -35,14 +40,4 @@ class GNN(AbstractGNN):
         Output:
             h: Output layer weights
         """
-        # input step
-        embed = self.embed(graph_data.x)
-        h = self.conv1(embed, graph_data.edge_attr)
-        h = torch.relu(h)
-        h = F.dropout(h, p=self.dropout_frac)
-
-        # output step
-        h = self.conv2(h, graph_data.edge_attr)
-        h = torch.sigmoid(h)
-
-        return h
+        raise NotImplementedError

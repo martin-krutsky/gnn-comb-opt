@@ -1,10 +1,19 @@
-from itertools import islice
+import os
+from typing import Optional
 
 import networkx as nx
 import torch
+from torch_geometric.data import Dataset, Data, InMemoryDataset
+from torch_geometric.utils.convert import from_networkx
+
+import domains
+from domains.abstract.AbstractCODomain import AbstractCODomain
+from utils.transform import qubo_dict_to_torch
+
+DATASET_DIR = 'datasets/'
 
 
-def generate_graph(n, d=None, p=None, graph_type='reg', random_seed=0):
+def generate_graph(n: int, d: int = None, p: float = None, graph_type: str = 'reg', random_seed: int = 0) -> nx.Graph:
     """
     Helper function to generate a NetworkX random graph of specified type,
     given specified parameters (e.g. d-regular, d=3). Must provide one of
@@ -40,32 +49,25 @@ def generate_graph(n, d=None, p=None, graph_type='reg', random_seed=0):
     return nx_graph
 
 
-def qubo_dict_to_torch(nx_g, q, torch_dtype=None, torch_device=None):
-    """
-    Output q matrix as torch tensor for given q in dictionary format.
+def get_dataset(domain_name: str, data_size: int = 1, problem_size: int = 10, node_degree: int = 3, graph_type: str = 'reg',
+                dtype: torch.dtype = torch.float32, device: str = 'cpu') -> Dataset:
+    dataset_path = os.path.join(DATASET_DIR, f'{domain_name}.pkl')
+    if not os.path.isfile(dataset_path):
+        os.makedirs(DATASET_DIR, exist_ok=True)
 
-    Input:
-        q: QUBO matrix as defaultdict
-        nx_g: graph as networkx object (needed for node lables can vary 0,1,... vs 1,2,... vs a,b,...)
-    Output:
-        q: QUBO as torch tensor
-    """
-    # get number of nodes
-    n_nodes = len(nx_g.nodes)
+        try:
+            domain_cls: AbstractCODomain = getattr(domains, domain_name)
+        except AttributeError:
+            raise AttributeError('Unknown CO domain class')
 
-    # get QUBO q as torch tensor
-    q_mat = torch.zeros(n_nodes, n_nodes)
-    for (x_coord, y_coord), val in q.items():
-        q_mat[x_coord][y_coord] = val
-
-    if torch_dtype is not None:
-        q_mat = q_mat.type(torch_dtype)
-
-    if torch_device is not None:
-        q_mat = q_mat.to(torch_device)
-
-    return q_mat
-
-
-def gen_combinations(combs, chunk_size):
-    yield from iter(lambda: list(islice(combs, chunk_size)), [])
+        data_list = []
+        for i in range(data_size):
+            nx_graph = generate_graph(n=problem_size, d=node_degree, graph_type=graph_type, random_seed=i)
+            q_dict = domain_cls.gen_q_dict(nx_graph)
+            edge_index = qubo_dict_to_torch(nx_graph, q_dict, dtype, device)
+            data = Data(x=torch.range(1, problem_size, dtype=torch.int), edge_index=edge_index)
+            data_list.append(data)
+        Dataset.save(data_list, dataset_path)
+    dataset: Dataset = InMemoryDataset()
+    dataset.load(dataset_path)
+    return dataset

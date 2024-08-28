@@ -1,4 +1,5 @@
 import random
+from argparse import Namespace
 from typing import Callable
 
 import git
@@ -8,10 +9,16 @@ import torch
 import torch.nn as nn
 from torch.nn import Module
 from torch.optim import Optimizer
-from torch_geometric.data import Data
+from torch.xpu import device
+from torch_geometric.data import Data, Dataset
+from torch_geometric.loader import DataLoader
+from torch_geometric.nn import MessagePassing
 from tqdm import tqdm
 
+import models
+from models.abstract.abstract_gnn import AbstractGNN
 from scripts.parser import get_parser
+from utils.data import get_dataset
 from utils.loss import loss_func
 
 
@@ -40,61 +47,51 @@ def evaluate(model: Module, loss_fn: Callable, data: Data) -> ([int], [float], [
         return acc, pred.detach().cpu(), loss.detach().cpu()
 
 
-def run_exp(args, dataset, model_cls, fold):
-    data = get_fixed_splits(dataset, args['dataset'], fold)
-    data = data.to(args['device'])
+def run_exp(args: Namespace, dataset: Dataset, model_cls: AbstractGNN, gcn_cls: MessagePassing, seed: int) -> (float, float):
+    dataset_size = len(dataset)
+    dataloader = DataLoader(dataset, batch_size=dataset_size, shuffle=False)
 
-    model = model_cls(data.edge_index, args)
-    model = model.to(args['device'])
-
-    sheaf_learner_params, other_params = model.grouped_parameters()
-    optimizer = torch.optim.Adam([
-        {'params': sheaf_learner_params, 'weight_decay': args['sheaf_decay']},
-        {'params': other_params, 'weight_decay': args['weight_decay']}
-    ], lr=args['lr'])
+    model = model_cls(
+        gcn_cls, args.problem_size, args.embedding_size, args.hidden_channels, dataset.num_classes, args.dropout, args.device
+    ).type(args.dtype).to(args.device)
+    optimizer = torch.optim.Adam(model.parameter(), weight_decay=args.weight_decay, lr=args.lr)
 
     epoch = 0
-    best_val_acc = test_acc = 0
-    best_val_loss = float('inf')
-    val_loss_history = []
-    val_acc_history = []
+    best_train_acc = 0
+    best_train_loss = float('inf')
     best_epoch = 0
     bad_counter = 0
 
-    for epoch in range(args['epochs']):
-        train_step(model, loss_func, optimizer, data)
+    for epoch in range(args.epochs):
+        full_batch = next(iter(dataloader))
+        full_batch.to(args.device)
+        train_step(model, loss_func, optimizer, full_batch)
 
-        [train_acc, val_acc, tmp_test_acc], preds, [
-            train_loss, val_loss, tmp_test_loss] = evaluate(model, loss_func, data)
-        if fold == 0:
-            res_dict = {
-                f'fold{fold}_train_acc': train_acc,
-                f'fold{fold}_train_loss': train_loss,
-                f'fold{fold}_val_acc': val_acc,
-                f'fold{fold}_val_loss': val_loss,
-                f'fold{fold}_tmp_test_acc': tmp_test_acc,
-                f'fold{fold}_tmp_test_loss': tmp_test_loss,
-            }
-
-        new_best_trigger = val_acc > best_val_acc if args['stop_strategy'] == 'acc' else val_loss < best_val_loss
+        train_acc, preds, train_loss = evaluate(model, loss_func, full_batch)
+        new_best_trigger = train_acc > best_train_acc if args.stop_strategy == 'acc' else train_loss < best_train_loss
         if new_best_trigger:
-            best_val_acc = val_acc
-            best_val_loss = val_loss
-            test_acc = tmp_test_acc
+            best_train_acc = train_acc
+            best_train_loss = train_loss
             best_epoch = epoch
             bad_counter = 0
         else:
             bad_counter += 1
 
-        if bad_counter == args['early_stopping']:
+        if bad_counter == args.early_stopping_patience:
             break
 
-    print(f"Fold {fold} | Epochs: {epoch} | Best epoch: {best_epoch}")
-    print(f"Test acc: {test_acc:.4f}")
-    print(f"Best val acc: {best_val_acc:.4f}")
+    print(f"Random seed {seed} | Epochs: {epoch} | Best epoch: {best_epoch}")
+    print(f"Best train loss: {best_train_loss:.4f}")
+    return best_train_acc, best_train_loss
 
-    keep_running = False if test_acc < args['min_acc'] else True
-    return test_acc, best_val_acc, keep_running
+
+def set_seed(seed):
+    # Set the seed for everything
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
 
 
 if __name__ == '__main__':
@@ -102,38 +99,41 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     try:
-        model_cls = getattr(nn, args.gcn)
+        model_cls: AbstractGNN = getattr(models, args.model)
     except AttributeError:
-        raise AttributeError('Unknown GCN layer')
+        raise AttributeError('Unknown GNN model class')
 
-    dataset = get_dataset(args.dataset)
+    try:
+        gcn_cls: MessagePassing = getattr(nn, args.gcn)
+    except AttributeError:
+        raise AttributeError('Unknown GCN layer class')
+
+    dataset: Dataset = get_dataset(args.domain, data_size=args.data_size, problem_size=args.problem_size,
+                                   node_degree=args.node_degree, graph_type=args.graph_type,
+                                   dtype=args.dtype, device=args.device)
 
     repo = git.Repo(search_parent_directories=True)
     sha = repo.head.object.hexsha
     args.sha = sha
 
-    args.device = torch.device(f'cuda:{args.cuda}' if torch.cuda.is_available() else 'cpu')
-
-    # Set the seed for everything
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
-    np.random.seed(args.seed)
-    random.seed(args.seed)
+    if torch.cuda.is_available() and args.device == 'cuda':
+        args.device = f'cuda:{args.cuda}'
+    args.dtype = torch.float32
 
     results = []
     print(args)
 
-    for fold in tqdm(range(args.folds)):
-        test_accuracy, best_val_accuracy, keep_running = run_exp(args, dataset, model_cls, fold)
-        results.append([test_accuracy, best_val_accuracy])
-        if not keep_running:
-            break
+    for rnd_seed in tqdm(range(args.rnd_seeds)):
+        set_seed(rnd_seed)
+        final_train_accuracy, final_train_loss = run_exp(args, dataset, model_cls, gcn_cls, rnd_seed)
+        results.append([final_train_accuracy, final_train_loss])
 
     results = np.array(results)
-    test_acc_mean, val_acc_mean = np.mean(results, axis=0) * 100
-    test_acc_std = np.sqrt(np.var(results, axis=0)[0]) * 100
+    train_acc_mean, train_loss_mean = np.mean(results, axis=0)
+    train_acc_mean *= 100
+    train_acc_std, train_loss_std = np.sqrt(np.var(results, axis=0))
+    train_acc_std *= 100
 
 
     print(f'{args.gcn} on {args.dataset} | SHA: {sha}')
-    print(f'Test acc: {test_acc_mean:.4f} +/- {test_acc_std:.4f} | Val acc: {val_acc_mean:.4f}')
+    print(f'Train acc: {train_acc_mean:.4f} +/- {train_acc_std:.4f} | Train loss: {train_loss_mean:.4f} +/- {train_loss_std:.4f}')
