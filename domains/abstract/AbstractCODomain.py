@@ -1,7 +1,12 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 
 
 class AbstractCODomain(ABC):
+    @property
+    @abstractmethod
+    def num_classes(self):
+        pass
+
     @staticmethod
     @abstractmethod
     def gen_q_dict(nx_g, penalty=2):

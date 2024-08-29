@@ -6,7 +6,10 @@ from time import time
 from domains.abstract.AbstractCODomain import AbstractCODomain
 from utils.transform import gen_combinations
 
+
 class MIS(AbstractCODomain):
+    num_classes = 1
+
     @staticmethod
     def gen_q_dict(nx_g, penalty=2):
         """
@@ -41,7 +44,7 @@ class MIS(AbstractCODomain):
         Output:
             ind_set_bitstring_nx: bitstring solution as list
             ind_set_nx_size: size of independent set (int)
-            number_violations: number of violations of ind.set condition
+            number_violations: number of violations of ind_set condition
         """
         # compare with traditional solver
         t_start = time()
