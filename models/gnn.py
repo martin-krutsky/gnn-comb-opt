@@ -9,7 +9,7 @@ from models.abstract.abstract_gnn import AbstractGNN
 
 
 class GNN(AbstractGNN):
-    def __init__(self, gnn_layer_cls: MessagePassing, n_nodes: int, in_feats: int, hidden_channels: int,
+    def __init__(self, gnn_layer_cls: type[MessagePassing], n_nodes: int, in_feats: int, hidden_channels: int,
                  number_classes: int, dropout: float, device: torch.device):
         """
         Initialize a new instance of the GNN model of provided size.

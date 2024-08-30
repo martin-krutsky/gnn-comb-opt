@@ -8,8 +8,8 @@ from torch_geometric.nn.conv import MessagePassing
 
 
 class AbstractGNN(ABC, nn.Module):
-    def __init__(self, gnn_layer_cls: MessagePassing, n_nodes: int, in_feats: int, hidden_channels: int,
-                 number_classes: int, dropout: float, device: torch.device):
+    def __init__(self, gnn_layer_cls: type[MessagePassing], n_nodes: int, in_feats: int, hidden_channels: int,
+                 number_classes: int, dropout: float, device: str):
         """
         Initialize a new instance of the GNN model of provided size.
         Dropout is added in forward step.

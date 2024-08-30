@@ -59,10 +59,26 @@ def visualize_graph(nx_graph: nx.Graph, bitstrings=None):
     plt.show()
 
 
+def create_data(domain_cls: type[AbstractCODomain], rnd_seed: int = 1, problem_size: int = 10, node_degree: int = 3, graph_type: str = 'reg',
+                dtype: torch.dtype = torch.float64, device: str = 'cpu', visualize: bool = False) -> Data:
+    nx_graph = generate_graph(n=problem_size, d=node_degree, graph_type=graph_type, random_seed=rnd_seed)
+    if visualize:
+        visualize_graph(nx_graph)
+
+    q_dict = domain_cls.gen_q_dict(nx_graph)
+    q_torch = qubo_dict_to_torch(nx_graph, q_dict, torch_dtype=dtype, torch_device=device)
+
+    data = from_networkx(nx_graph).to(device)
+    data.x = torch.arange(0, problem_size, dtype=torch.int)
+    data.q_matrix = q_torch
+    data.nx_graph = nx_graph
+    return data
+
+
 def get_dataset(domain_name: str, data_size: int = 1, problem_size: int = 10, node_degree: int = 3, graph_type: str = 'reg',
                 dtype: torch.dtype = torch.float64, device: str = 'cpu') -> Dataset:
     try:
-        domain_cls: AbstractCODomain = getattr(domains, domain_name)
+        domain_cls: type[AbstractCODomain] = getattr(domains, domain_name)
     except AttributeError:
         raise AttributeError('Unknown CO domain class')
 
@@ -70,17 +86,9 @@ def get_dataset(domain_name: str, data_size: int = 1, problem_size: int = 10, no
     if not os.path.isfile(dataset_path):
         os.makedirs(DATASET_DIR, exist_ok=True)
 
-        data_list = []
+        data_list: [Data] = []
         for i in range(1, data_size + 1):
-            nx_graph = generate_graph(n=problem_size, d=node_degree, graph_type=graph_type, random_seed=i)
-            visualize_graph(nx_graph)
-            q_dict = domain_cls.gen_q_dict(nx_graph)
-            q_torch = qubo_dict_to_torch(nx_graph, q_dict, torch_dtype=dtype, torch_device=device)
-
-            data = from_networkx(nx_graph).to(device)
-            data.x = torch.arange(0, problem_size, dtype=torch.int)
-            data.q_matrix = q_torch
-            data.nx_graph = nx_graph
+            data: Data = create_data(domain_cls, i, problem_size, node_degree, graph_type, dtype, device)
             data_list.append(data)
         InMemoryDataset.save(data_list, dataset_path)
     dataset: Dataset = InMemoryDataset()

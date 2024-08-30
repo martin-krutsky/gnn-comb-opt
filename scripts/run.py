@@ -1,5 +1,7 @@
-import random
+import json
 from argparse import Namespace
+import hashlib
+import random
 from typing import Callable
 
 import git
@@ -11,14 +13,14 @@ from torch.optim import Optimizer
 from torch_geometric.data import Data, Dataset
 from torch_geometric.loader import DataLoader
 import torch_geometric.nn as pyg_nn
-from torch_geometric.nn import MessagePassing
-from tqdm import tqdm
+from torch_geometric.nn.conv import MessagePassing
 
 import models
 from models.abstract.abstract_gnn import AbstractGNN
 from scripts.parser import get_parser
 from utils.data import get_dataset, visualize_graph
 from utils.loss import loss_func
+from utils.model_io import save_model_with_metadata
 
 
 def train_step(model: Module, loss_fn: Callable, optimizer: Optimizer, data_batch: Data, is_batch: bool = False) -> float:
@@ -42,16 +44,43 @@ def predict(model: Module, data: Data, prob_threshold: float) -> [int]:
         return pred.detach().cpu().numpy().squeeze().tolist()
 
 
-def run_exp(args: Namespace, dataset: Dataset, model_cls: AbstractGNN, gcn_cls: MessagePassing, seed: int) -> (float, [int]):
+def hash_dict(dictionary: dict, hash_len: int = 6):
+    sha1 = hashlib.sha1()
+    sha1.update(json.dumps(dictionary, sort_keys=True).encode())
+    return sha1.hexdigest()[:hash_len]
+
+
+def hash_save_model(model: AbstractGNN, model_hyperparams: dict, optimizer_params: dict, args: Namespace, seed: int):
+    model_hyperparams['model_cls'] = args.model_cls
+    model_hyperparams['gcn_cls'] = args.gcn_cls
+    hyperparam_hash = hash_dict(model_hyperparams)
+    optparam_hash = hash_dict(optimizer_params)
+    save_path = args.save_path.format(domain=args.domain,
+                                      domain_params=f'n{args.problem_size}_d{args.node_degree}_{args.graph_type}',
+                                      hyperparam_hash=hyperparam_hash, optparam_hash=optparam_hash,
+                                      rnd_seed=seed)
+    save_model_with_metadata(model, model_hyperparams, save_path)
+
+
+def run_exp(args: Namespace, dataset: Dataset, model_cls: type[AbstractGNN], gcn_cls: type[MessagePassing], seed: int,
+            should_save_model: bool = False) -> (float, [int]):
     dataset_size = len(dataset)
     dataloader = DataLoader(dataset, batch_size=dataset_size, shuffle=False)
     is_batch = dataset_size > 1
 
-    model = model_cls(
-        gcn_cls, args.problem_size, args.embedding_size, args.hidden_channels, dataset.domain.num_classes,
-        args.dropout, args.device
-    ).type(args.data_type).to(args.device)
-    optimizer = torch.optim.Adam(model.parameters(), weight_decay=args.weight_decay, lr=args.lr)
+    model_hyperparams = {
+        "n_nodes": args.problem_size,
+        "in_feats": args.embedding_size,
+        "hidden_channels": args.hidden_channels,
+        "number_classes": dataset.domain.num_classes,
+        "dropout": args.dropout
+    }
+    model: AbstractGNN = model_cls(gcn_cls, **model_hyperparams, device=args.device).type(args.data_type).to(args.device)
+    optimizer_params = {
+        "lr": args.lr,
+        "weight_decay": args.weight_decay,
+    }
+    optimizer: torch.optim.Optimizer = torch.optim.Adam(model.parameters(), **optimizer_params)
 
     epoch = 0
     best_train_loss = float('inf')
@@ -93,6 +122,9 @@ def run_exp(args: Namespace, dataset: Dataset, model_cls: AbstractGNN, gcn_cls: 
 
         last_loss = train_loss
 
+    if should_save_model:
+        hash_save_model(model, model_hyperparams, optimizer_params, args, seed)
+
     print(f"Random seed {seed} | Epochs: {epoch} | Best epoch: {best_epoch}")
     print(f"Best loss: {best_train_loss:.4f}, last loss: {last_loss:.4f}")
     return best_train_loss, best_bit_prediction
@@ -109,42 +141,43 @@ def set_seed(seed):
 
 if __name__ == '__main__':
     parser = get_parser()
-    args = parser.parse_args()
+    parsed_args = parser.parse_args()
 
     try:
-        model_cls: AbstractGNN = getattr(models, args.model)
+        model_class: type[AbstractGNN] = getattr(models, parsed_args.model_cls)
     except AttributeError:
         raise AttributeError('Unknown GNN model class')
 
     try:
-        gcn_cls: MessagePassing = getattr(pyg_nn, args.gcn)
+        gcn_class: type[MessagePassing] = getattr(pyg_nn, parsed_args.gcn_cls)
     except AttributeError:
         raise AttributeError('Unknown GCN layer class')
 
-    args.data_type = getattr(torch, args.data_type)
-    dataset: Dataset = get_dataset(args.domain, data_size=args.data_size, problem_size=args.problem_size,
-                                   node_degree=args.node_degree, graph_type=args.graph_type,
-                                   dtype=args.data_type, device=args.device)
+    parsed_args.data_type = getattr(torch, parsed_args.data_type)
+    exp_dataset: Dataset = get_dataset(parsed_args.domain, data_size=parsed_args.data_size,
+                                       problem_size=parsed_args.problem_size, node_degree=parsed_args.node_degree,
+                                       graph_type=parsed_args.graph_type,
+                                       dtype=parsed_args.data_type, device=parsed_args.device)
 
     repo = git.Repo(search_parent_directories=True)
     sha = repo.head.object.hexsha
-    args.sha = sha
+    parsed_args.sha = sha
 
-    setting_msg = f'{args.gcn} on {args.domain} | SHA: {sha}'
+    setting_msg = f'{parsed_args.model_cls} with {parsed_args.gcn_cls} on {parsed_args.domain} | SHA: {sha}'
     print(setting_msg)
     print('-' * len(setting_msg))
 
-    if torch.cuda.is_available() and args.device == 'cuda':
-        args.device = f'cuda:{args.cuda}'
+    if torch.cuda.is_available() and parsed_args.device == 'cuda':
+        parsed_args.device = f'cuda:{parsed_args.cuda}'
 
     losses, predictions = [], []
-    for rnd_seed in range(args.rnd_seeds):
+    for rnd_seed in range(parsed_args.rnd_seeds):
         set_seed(rnd_seed)
-        best_loss, best_prediction = run_exp(args, dataset, model_cls, gcn_cls, rnd_seed)
+        best_loss, best_prediction = run_exp(parsed_args, exp_dataset, model_class, gcn_class, rnd_seed,
+                                             should_save_model=True)
         losses.append(best_loss)
         predictions.append(best_prediction)
-        for datapoint, pred in zip(dataset, predictions):
-            print(pred)
+        for datapoint, pred in zip(exp_dataset, predictions):
             visualize_graph(datapoint.nx_graph, pred)
 
     losses = np.array(losses)
