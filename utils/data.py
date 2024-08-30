@@ -1,6 +1,6 @@
 import os
-from typing import Optional
 
+import matplotlib.pyplot as plt
 import networkx as nx
 import torch
 from torch_geometric.data import Dataset, Data, InMemoryDataset
@@ -49,6 +49,16 @@ def generate_graph(n: int, d: int = None, p: float = None, graph_type: str = 're
     return nx_graph
 
 
+def visualize_graph(nx_graph: nx.Graph, bitstrings=None):
+    pos = nx.kamada_kawai_layout(nx_graph)
+    if bitstrings is None:
+        nx.draw(nx_graph, pos=pos, with_labels=True)
+    else:
+        color_map = ['orange' if (bitstrings[node] == 0) else 'lightblue' for node in nx_graph.nodes]
+        nx.draw(nx_graph, pos=pos, with_labels=True, node_color=color_map)
+    plt.show()
+
+
 def get_dataset(domain_name: str, data_size: int = 1, problem_size: int = 10, node_degree: int = 3, graph_type: str = 'reg',
                 dtype: torch.dtype = torch.float64, device: str = 'cpu') -> Dataset:
     try:
@@ -63,12 +73,14 @@ def get_dataset(domain_name: str, data_size: int = 1, problem_size: int = 10, no
         data_list = []
         for i in range(1, data_size + 1):
             nx_graph = generate_graph(n=problem_size, d=node_degree, graph_type=graph_type, random_seed=i)
+            visualize_graph(nx_graph)
             q_dict = domain_cls.gen_q_dict(nx_graph)
             q_torch = qubo_dict_to_torch(nx_graph, q_dict, torch_dtype=dtype, torch_device=device)
 
             data = from_networkx(nx_graph).to(device)
             data.x = torch.arange(0, problem_size, dtype=torch.int)
             data.q_matrix = q_torch
+            data.nx_graph = nx_graph
             data_list.append(data)
         InMemoryDataset.save(data_list, dataset_path)
     dataset: Dataset = InMemoryDataset()

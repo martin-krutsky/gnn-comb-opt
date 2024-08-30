@@ -17,7 +17,7 @@ from tqdm import tqdm
 import models
 from models.abstract.abstract_gnn import AbstractGNN
 from scripts.parser import get_parser
-from utils.data import get_dataset
+from utils.data import get_dataset, visualize_graph
 from utils.loss import loss_func
 
 
@@ -39,7 +39,7 @@ def predict(model: Module, data: Data, prob_threshold: float) -> [int]:
     with torch.no_grad():
         out = model(data)
         pred = (out >= prob_threshold).int()
-        return pred.detach().cpu().numpy().tolist()
+        return pred.detach().cpu().numpy().squeeze().tolist()
 
 
 def run_exp(args: Namespace, dataset: Dataset, model_cls: AbstractGNN, gcn_cls: MessagePassing, seed: int) -> (float, [int]):
@@ -84,7 +84,11 @@ def run_exp(args: Namespace, dataset: Dataset, model_cls: AbstractGNN, gcn_cls: 
         else:
             small_change_counter = 0
 
-        if no_improv_counter >= args.early_stopping_patience or small_change_counter >= args.early_stopping_patience:
+        if no_improv_counter >= args.early_stopping_patience:
+            print("Early stopping triggered due to no improvement")
+            break
+        if small_change_counter >= args.early_stopping_patience:
+            print("Early stopping triggered due to small changes")
             break
 
         last_loss = train_loss
@@ -96,11 +100,11 @@ def run_exp(args: Namespace, dataset: Dataset, model_cls: AbstractGNN, gcn_cls: 
 
 def set_seed(seed):
     # Set the seed for everything
+    random.seed(seed)
+    np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
 
 
 if __name__ == '__main__':
@@ -139,6 +143,9 @@ if __name__ == '__main__':
         best_loss, best_prediction = run_exp(args, dataset, model_cls, gcn_cls, rnd_seed)
         losses.append(best_loss)
         predictions.append(best_prediction)
+        for datapoint, pred in zip(dataset, predictions):
+            print(pred)
+            visualize_graph(datapoint.nx_graph, pred)
 
     losses = np.array(losses)
     train_loss_mean = np.mean(losses, axis=0)
