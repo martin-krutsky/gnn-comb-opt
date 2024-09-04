@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -49,7 +50,7 @@ def generate_graph(n: int, d: int = None, p: float = None, graph_type: str = 're
     return nx_graph
 
 
-def visualize_graph(nx_graph: nx.Graph, bitstrings=None):
+def visualize_graph(nx_graph: nx.Graph, bitstrings: Optional[torch.Tensor] = None):
     pos = nx.kamada_kawai_layout(nx_graph)
     if bitstrings is None:
         nx.draw(nx_graph, pos=pos, with_labels=True)

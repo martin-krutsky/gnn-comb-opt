@@ -36,12 +36,12 @@ def train_step(model: Module, loss_fn: Callable, optimizer: Optimizer, data_batc
     return loss.detach().item()
 
 
-def predict(model: Module, data: Data, prob_threshold: float) -> [int]:
+def predict(model: Module, data: Data, prob_threshold: float) -> torch.Tensor:
     model.eval()
     with torch.no_grad():
         out = model(data)
         pred = (out >= prob_threshold).int()
-        return pred.detach().cpu().numpy().squeeze().tolist()
+        return pred.detach().cpu().T
 
 
 def hash_dict(dictionary: dict, hash_len: int = 6):
@@ -63,7 +63,7 @@ def hash_save_model(model: AbstractGNN, model_hyperparams: dict, optimizer_param
 
 
 def run_exp(args: Namespace, dataset: Dataset, model_cls: type[AbstractGNN], gcn_cls: type[MessagePassing], seed: int,
-            should_save_model: bool = False) -> (float, [int]):
+            should_save_model: bool = False) -> (float, torch.Tensor):
     dataset_size = len(dataset)
     dataloader = DataLoader(dataset, batch_size=dataset_size, shuffle=False)
     is_batch = dataset_size > 1
@@ -179,15 +179,15 @@ if __name__ == '__main__':
         predictions.append(best_prediction)
         for datapoint, pred in zip(exp_dataset, best_prediction):
             # compute correctness of the neural prediction
-            size_mis, ind_set, number_violations = exp_dataset.domain.postprocess_gnn([pred], datapoint.nx_graph)
+            size_mis, ind_set, number_violations = exp_dataset.domain.postprocess_gnn(pred, datapoint.nx_graph)
             print(f'{exp_dataset.domain.criterion_name} found by GNN is {size_mis} with {number_violations} violations')
 
             # visualize the prediction
-            visualize_graph(datapoint.nx_graph, [pred])
+            visualize_graph(datapoint.nx_graph, pred)
 
             # compute an approximate solution using a solver
             ind_set_bitstring_nx, ind_set_nx_size, nx_number_violations, t_solve = exp_dataset.domain.run_solver(datapoint.nx_graph)
-            print(f'{exp_dataset.domain.criterion_name} found by solver is {size_mis} with {number_violations} violations')
+            print(f'{exp_dataset.domain.criterion_name} found by solver is {ind_set_nx_size} with {number_violations} violations')
 
     losses = np.array(losses)
     train_loss_mean = np.mean(losses, axis=0)
