@@ -1,4 +1,5 @@
 import json
+import warnings
 from argparse import Namespace
 import hashlib
 import random
@@ -170,13 +171,15 @@ if __name__ == '__main__':
     if torch.cuda.is_available() and parsed_args.device == 'cuda':
         parsed_args.device = f'cuda:{parsed_args.cuda}'
 
-    losses, predictions = [], []
+    losses, predictions, improvements = [], [], []
     for rnd_seed in range(parsed_args.rnd_seeds):
+        print(('\n' if rnd_seed > 0 else '') + f'Training with random seed {rnd_seed}...')
         set_seed(rnd_seed)
         best_loss, best_prediction = run_exp(parsed_args, exp_dataset, model_class, gcn_class, rnd_seed,
                                              should_save_model=True)
         losses.append(best_loss)
         predictions.append(best_prediction)
+        improvement_nn_solver = []
         for datapoint, pred in zip(exp_dataset, best_prediction):
             # compute correctness of the neural prediction
             size_mis, ind_set, number_violations = exp_dataset.domain.postprocess_gnn(pred, datapoint.nx_graph)
@@ -189,8 +192,20 @@ if __name__ == '__main__':
             ind_set_bitstring_nx, ind_set_nx_size, nx_number_violations, t_solve = exp_dataset.domain.run_solver(datapoint.nx_graph)
             print(f'{exp_dataset.domain.criterion_name} found by solver is {ind_set_nx_size} with {number_violations} violations')
 
+            improvement_nn_solver.append(size_mis - ind_set_nx_size)
+        improvements.append(improvement_nn_solver)
+
+    print('\n')
     losses = np.array(losses)
     train_loss_mean = np.mean(losses, axis=0)
     train_loss_std = np.sqrt(np.var(losses, axis=0))
+    print(f'Mean loss across {parsed_args.rnd_seeds} seeds: {train_loss_mean:.4f} +/- {train_loss_std:.4f}')
 
-    print(f'Train loss: {train_loss_mean:.4f} +/- {train_loss_std:.4f}')
+    improvements = np.array(improvements)
+    improved, worsened, equal = improvements[improvements > 0], improvements[improvements < 0], improvements[np.isclose(improvements, 0)]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        print(f'Neural network found '
+              f'better solution in {len(improved)} case(s) (avg. {np.nan_to_num(improved.mean()):.4f} +- {np.nan_to_num(improved.std()):.4f}), '
+              f'worse solution in {len(worsened)} case(s) (avg. {np.nan_to_num(worsened.mean()):.4f} +- {np.nan_to_num(worsened.std()):.4f}), '
+              f'and equal solution in {len(equal)} case(s)')
