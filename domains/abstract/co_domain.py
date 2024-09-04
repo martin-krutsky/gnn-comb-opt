@@ -1,15 +1,24 @@
 from abc import ABC, abstractmethod, abstractproperty
+from collections import defaultdict
+
+import networkx as nx
+import torch
 
 
-class AbstractCODomain(ABC):
+class CODomain(ABC):
     @property
     @abstractmethod
-    def num_classes(self):
+    def num_classes(self) -> int:
+        pass
+
+    @property
+    @abstractmethod
+    def criterion_name(self) -> str:
         pass
 
     @staticmethod
     @abstractmethod
-    def gen_q_dict(nx_g, penalty=2):
+    def gen_q_dict(nx_g: nx.Graph, penalty: int = 2) -> defaultdict:
         """
         Helper function to generate QUBO matrix for a CO domain as minimization problem.
 
@@ -22,7 +31,7 @@ class AbstractCODomain(ABC):
 
     @staticmethod
     @abstractmethod
-    def run_solver(nx_graph):
+    def run_solver(nx_graph: nx.Graph) -> (list, int, int):
         """
         helper function to run traditional solver for a CO domain.
 
@@ -37,7 +46,7 @@ class AbstractCODomain(ABC):
 
     @staticmethod
     @abstractmethod
-    def postprocess_gnn(best_bitstring, nx_graph):
+    def postprocess_gnn(best_bitstring: torch.Tensor, nx_graph: nx.Graph) -> (list, int, int):
         """
         helper function to postprocess results
 

@@ -7,7 +7,7 @@ from torch_geometric.data import Dataset, Data, InMemoryDataset
 from torch_geometric.utils.convert import from_networkx
 
 import domains
-from domains.abstract.AbstractCODomain import AbstractCODomain
+from domains.abstract.co_domain import CODomain
 from utils.transform import qubo_dict_to_torch
 
 DATASET_DIR = 'datasets/'
@@ -59,7 +59,7 @@ def visualize_graph(nx_graph: nx.Graph, bitstrings=None):
     plt.show()
 
 
-def create_data(domain_cls: type[AbstractCODomain], rnd_seed: int = 1, problem_size: int = 10, node_degree: int = 3, graph_type: str = 'reg',
+def create_data(domain_cls: type[CODomain], rnd_seed: int = 1, problem_size: int = 10, node_degree: int = 3, graph_type: str = 'reg',
                 dtype: torch.dtype = torch.float64, device: str = 'cpu', visualize: bool = False) -> Data:
     nx_graph = generate_graph(n=problem_size, d=node_degree, graph_type=graph_type, random_seed=rnd_seed)
     if visualize:
@@ -76,9 +76,9 @@ def create_data(domain_cls: type[AbstractCODomain], rnd_seed: int = 1, problem_s
 
 
 def get_dataset(domain_name: str, data_size: int = 1, problem_size: int = 10, node_degree: int = 3, graph_type: str = 'reg',
-                dtype: torch.dtype = torch.float64, device: str = 'cpu') -> Dataset:
+                dtype: torch.dtype = torch.float64, device: str = 'cpu', save_to_file: bool = True) -> Dataset:
     try:
-        domain_cls: type[AbstractCODomain] = getattr(domains, domain_name)
+        domain_cls: type[CODomain] = getattr(domains, domain_name)
     except AttributeError:
         raise AttributeError('Unknown CO domain class')
 
@@ -94,5 +94,7 @@ def get_dataset(domain_name: str, data_size: int = 1, problem_size: int = 10, no
     dataset: Dataset = InMemoryDataset()
     dataset.load(dataset_path)
     dataset.domain = domain_cls
-    os.remove(dataset_path)
+
+    if not save_to_file:
+        os.remove(dataset_path)
     return dataset

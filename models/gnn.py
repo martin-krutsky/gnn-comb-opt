@@ -1,9 +1,11 @@
+from email.headerregistry import MessageIDHeader
+
 import torch
 from torch import nn
 import torch.nn.functional as F
 
 from torch_geometric.data import Data
-from torch_geometric.nn.conv import MessagePassing
+from torch_geometric.nn import MessagePassing
 
 from models.abstract.abstract_gnn import AbstractGNN
 
@@ -26,14 +28,14 @@ class GNN(AbstractGNN):
         self.conv1 = gnn_layer_cls(in_feats, hidden_channels, add_self_loops=False).to(device)
         self.conv2 = gnn_layer_cls(hidden_channels, number_classes, add_self_loops=False).to(device)
 
-    def forward(self, graph_data: Data):
+    def forward(self, graph_data: Data) -> torch.Tensor:
         """
         Run forward propagation step of instantiated model.
 
         Input:
             graph_data: pyg graph data object containing feature matrix and edge index
         Output:
-            h: Output layer weights
+            h: Output layer activations
         """
         # input step
         embed = self.embed(graph_data.x)

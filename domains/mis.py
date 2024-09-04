@@ -1,17 +1,21 @@
 from collections import defaultdict
 from itertools import combinations
+
+import networkx as nx
+import torch
 from networkx import maximal_independent_set as mis
 from time import time
 
-from domains.abstract.AbstractCODomain import AbstractCODomain
+from domains.abstract.co_domain import CODomain
 from utils.transform import gen_combinations
 
 
-class MIS(AbstractCODomain):
+class MIS(CODomain):
     num_classes = 1
+    criterion_name = "Independence number"
 
     @staticmethod
-    def gen_q_dict(nx_g, penalty=2):
+    def gen_q_dict(nx_g: nx.Graph, penalty: int = 2) -> defaultdict:
         """
         Helper function to generate QUBO matrix for MIS as minimization problem.
 
@@ -35,7 +39,7 @@ class MIS(AbstractCODomain):
         return q_dict
 
     @staticmethod
-    def run_solver(nx_graph):
+    def run_solver(nx_graph: nx.Graph) -> (list, int, int):
         """
         helper function to run traditional solver for MIS.
 
@@ -66,7 +70,7 @@ class MIS(AbstractCODomain):
         return nx_bitstring, ind_set_nx_size, number_violations, t_solve
 
     @staticmethod
-    def postprocess_gnn(best_bitstring, nx_graph):
+    def postprocess_gnn(best_bitstring: torch.Tensor, nx_graph: nx.Graph) -> (list, int, int):
         """
         helper function to postprocess MIS results
 

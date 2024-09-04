@@ -31,13 +31,13 @@ class AbstractGNN(ABC, nn.Module):
 
 
     @abstractmethod
-    def forward(self, graph_data: Data):
+    def forward(self, graph_data: Data) -> torch.Tensor:
         """
         Run forward propagation step of instantiated model.
 
         Input:
             graph_data: pyg graph data object containing feature matrix and edge index
         Output:
-            h: Output layer weights
+            h: Output layer activations
         """
         raise NotImplementedError

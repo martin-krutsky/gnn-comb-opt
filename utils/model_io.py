@@ -1,3 +1,4 @@
+import os
 from argparse import Namespace
 
 import onnx2torch
@@ -9,13 +10,14 @@ from torch_geometric.nn import MessagePassing
 
 import domains
 import models
-from domains.abstract.AbstractCODomain import AbstractCODomain
+from domains.abstract.co_domain import CODomain
 from models.abstract.abstract_gnn import AbstractGNN
 from utils.data import create_data
 
 
 # save/load state_dict only (requires recreating model instance)
 def save_model_state_dict(model: Module, filepath: str):
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
     torch.save(model.state_dict(), filepath)
 
 
@@ -32,6 +34,7 @@ def save_model_with_metadata(model: AbstractGNN, hyperparams: dict, filepath: st
         'gcn_cls_name': type(model.gnn_layer_cls).__name__,
         'hyperparams': hyperparams
     }
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
     torch.save(save_data, filepath)
 
 
@@ -55,7 +58,7 @@ def load_model_with_metadata(filepath: str, device: str) -> Module:
 
 # save/load using the ONNX format (may not be compatible with all pyg operations)
 def create_dummy_data_input(args: Namespace) -> Data:
-    domain_cls: type[AbstractCODomain] = getattr(domains, args.domain)
+    domain_cls: type[CODomain] = getattr(domains, args.domain)
     data: Data = create_data(domain_cls, rnd_seed=42, problem_size=args.problem_size, node_degree=args.node_degree,
                              graph_type=args.graph_type, dtype=args.data_type, device=args.device, visualize=False)
     return data
@@ -64,6 +67,7 @@ def create_dummy_data_input(args: Namespace) -> Data:
 def save_model_onnx(model: Module, filepath: str, args: Namespace):
     dummy_data = create_dummy_data_input(args)
     onnx_program = torch.onnx.dynamo_export(model, dummy_data)
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
     onnx_program.save(filepath)
 
 

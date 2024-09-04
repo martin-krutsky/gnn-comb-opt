@@ -1,8 +1,7 @@
 import torch
-from torch import Tensor
 
 
-def loss_func(probs: Tensor, q_mat: Tensor, is_batch: bool = False) -> Tensor:
+def loss_func(probs: torch.Tensor, q_mat: torch.Tensor, is_batch: bool = False) -> torch.Tensor:
     """
     Function to compute cost value for given probability of spin [prob(+1)] and predefined q matrix.
 
