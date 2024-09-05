@@ -1,158 +1,36 @@
-import json
 import warnings
-from argparse import Namespace
-import hashlib
-import random
-from typing import Callable
 
 import git
 import numpy as np
 
 import torch
-from torch.nn import Module
-from torch.optim import Optimizer
-from torch_geometric.data import Data, Dataset
-from torch_geometric.loader import DataLoader
-import torch_geometric.nn as pyg_nn
-from torch_geometric.nn.conv import MessagePassing
+from torch_geometric.data import Dataset
 
-import models
-from models.abstract.abstract_gnn import AbstractGNN
 from scripts.parser import get_parser
-from utils.data import get_dataset, visualize_graph
-from utils.loss import loss_func
-from utils.model_io import save_model_with_metadata
+from utils.data import get_dataset
+from runners import *
 
 
-def train_step(model: Module, loss_fn: Callable, optimizer: Optimizer, data_batch: Data, is_batch: bool = False) -> float:
-    model.train()
-    optimizer.zero_grad()
+def evaluate_final_results(losses, improvements, nr_of_seeds):
+    losses = np.array(losses)
+    train_loss_mean = np.mean(losses, axis=0)
+    train_loss_std = np.sqrt(np.var(losses, axis=0))
+    print(f'Mean loss across {nr_of_seeds} seeds: {train_loss_mean:.4f} +/- {train_loss_std:.4f}')
 
-    out = model(data_batch)[:, 0]
-    loss = loss_fn(out, data_batch.q_matrix, is_batch=is_batch)  # the edge index stores the Q matrix
-
-    loss.backward()
-    optimizer.step()
-
-    return loss.detach().item()
-
-
-def predict(model: Module, data: Data, prob_threshold: float) -> torch.Tensor:
-    model.eval()
-    with torch.no_grad():
-        out = model(data)
-        pred = (out >= prob_threshold).int()
-        return pred.detach().cpu().T
-
-
-def hash_dict(dictionary: dict, hash_len: int = 6):
-    sha1 = hashlib.sha1()
-    sha1.update(json.dumps(dictionary, sort_keys=True).encode())
-    return sha1.hexdigest()[:hash_len]
-
-
-def hash_save_model(model: AbstractGNN, model_hyperparams: dict, optimizer_params: dict, args: Namespace, seed: int):
-    model_hyperparams['model_cls'] = args.model_cls
-    model_hyperparams['gcn_cls'] = args.gcn_cls
-    hyperparam_hash = hash_dict(model_hyperparams)
-    optparam_hash = hash_dict(optimizer_params)
-    save_path = args.save_path.format(domain=args.domain,
-                                      domain_params=f'n{args.problem_size}_d{args.node_degree}_{args.graph_type}',
-                                      hyperparam_hash=hyperparam_hash, optparam_hash=optparam_hash,
-                                      rnd_seed=seed)
-    save_model_with_metadata(model, model_hyperparams, save_path)
-
-
-def run_exp(args: Namespace, dataset: Dataset, model_cls: type[AbstractGNN], gcn_cls: type[MessagePassing], seed: int,
-            should_save_model: bool = False) -> (float, torch.Tensor):
-    dataset_size = len(dataset)
-    dataloader = DataLoader(dataset, batch_size=dataset_size, shuffle=False)
-    is_batch = dataset_size > 1
-
-    model_hyperparams = {
-        "n_nodes": args.problem_size,
-        "in_feats": args.embedding_size,
-        "hidden_channels": args.hidden_channels,
-        "number_classes": dataset.domain.num_classes,
-        "dropout": args.dropout
-    }
-    model: AbstractGNN = model_cls(gcn_cls, **model_hyperparams, device=args.device).type(args.data_type).to(args.device)
-    optimizer_params = {
-        "lr": args.lr,
-        "weight_decay": args.weight_decay,
-    }
-    optimizer: torch.optim.Optimizer = torch.optim.Adam(model.parameters(), **optimizer_params)
-
-    epoch = 0
-    best_train_loss = float('inf')
-    best_bit_prediction = torch.zeros((dataset[0].num_nodes,)).type(args.data_type).to(args.device)
-    best_epoch = 0
-    no_improv_counter = 0
-    small_change_counter = 0
-    last_loss = None
-
-    for epoch in range(1, args.epochs + 1):
-        full_batch = next(iter(dataloader))
-        full_batch.to(args.device)
-        train_loss = train_step(model, loss_func, optimizer, full_batch, is_batch=is_batch)
-        prediction = predict(model, full_batch, args.assignment_threshold)
-
-        if (epoch % min(1000, int(args.epochs // 10))) == 0:
-            print(f'Epoch: {epoch}, Loss: {train_loss}')
-
-        new_best_trigger = train_loss < best_train_loss
-        if new_best_trigger:
-            best_train_loss = train_loss
-            best_epoch = epoch
-            best_bit_prediction = prediction
-            no_improv_counter = 0
-        else:
-            no_improv_counter += 1
-
-        if last_loss is not None and abs(train_loss - last_loss) < args.early_stopping_small_diff:
-            small_change_counter += 1
-        else:
-            small_change_counter = 0
-
-        if no_improv_counter >= args.early_stopping_patience:
-            print("Early stopping triggered due to no improvement")
-            break
-        if small_change_counter >= args.early_stopping_patience:
-            print("Early stopping triggered due to small changes")
-            break
-
-        last_loss = train_loss
-
-    if should_save_model:
-        hash_save_model(model, model_hyperparams, optimizer_params, args, seed)
-
-    print(f"Random seed {seed} | Epochs: {epoch} | Best epoch: {best_epoch}")
-    print(f"Best loss: {best_train_loss:.4f}, last loss: {last_loss:.4f}")
-    return best_train_loss, best_bit_prediction
-
-
-def set_seed(seed):
-    # Set the seed for everything
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    improvements = np.array(improvements)
+    improved, worsened, equal = improvements[improvements > 0], improvements[improvements < 0], improvements[
+        np.isclose(improvements, 0)]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        print(f'Neural network found '
+              f'better solution in {len(improved)} case(s) (avg. {np.nan_to_num(improved.mean()):.4f} +- {np.nan_to_num(improved.std()):.4f}), '
+              f'worse solution in {len(worsened)} case(s) (avg. {np.nan_to_num(worsened.mean()):.4f} +- {np.nan_to_num(worsened.std()):.4f}), '
+              f'and equal solution in {len(equal)} case(s)')
 
 
 if __name__ == '__main__':
     parser = get_parser()
     parsed_args = parser.parse_args()
-
-    try:
-        model_class: type[AbstractGNN] = getattr(models, parsed_args.model_cls)
-    except AttributeError:
-        raise AttributeError('Unknown GNN model class')
-
-    try:
-        gcn_class: type[MessagePassing] = getattr(pyg_nn, parsed_args.gcn_cls)
-    except AttributeError:
-        raise AttributeError('Unknown GCN layer class')
 
     parsed_args.data_type = getattr(torch, parsed_args.data_type)
     exp_dataset: Dataset = get_dataset(parsed_args.domain, data_size=parsed_args.data_size,
@@ -171,41 +49,28 @@ if __name__ == '__main__':
     if torch.cuda.is_available() and parsed_args.device == 'cuda':
         parsed_args.device = f'cuda:{parsed_args.cuda}'
 
-    losses, predictions, improvements = [], [], []
-    for rnd_seed in range(parsed_args.rnd_seeds):
-        print(('\n' if rnd_seed > 0 else '') + f'Training with random seed {rnd_seed}...')
-        set_seed(rnd_seed)
-        best_loss, best_prediction = run_exp(parsed_args, exp_dataset, model_class, gcn_class, rnd_seed,
-                                             should_save_model=True)
-        losses.append(best_loss)
-        predictions.append(best_prediction)
-        improvement_nn_solver = []
-        for datapoint, pred in zip(exp_dataset, best_prediction):
-            # compute correctness of the neural prediction
-            size_mis, ind_set, number_violations = exp_dataset.domain.postprocess_gnn(pred, datapoint.nx_graph)
-            print(f'{exp_dataset.domain.criterion_name} found by GNN is {size_mis} with {number_violations} violations')
+    losses_ls, predictions_ls, improvements_ls = [], [], []
 
-            # visualize the prediction
-            visualize_graph(datapoint.nx_graph, pred)
+    if parsed_args.seed is None and parsed_args.seed_list is not None:
+        rnd_seeds = list(range(parsed_args.seed_list))
+    else:
+        rnd_seeds = [parsed_args.seed]
 
-            # compute an approximate solution using a solver
-            ind_set_bitstring_nx, ind_set_nx_size, nx_number_violations, t_solve = exp_dataset.domain.run_solver(datapoint.nx_graph)
-            print(f'{exp_dataset.domain.criterion_name} found by solver is {ind_set_nx_size} with {number_violations} violations')
+    for rnd_seed in rnd_seeds:
+        if parsed_args.use_ray_tune:
+            best_training_loss, best_prediction, improvement_to_solver = RayRunner.run(
+                parsed_args, exp_dataset, rnd_seed,
+                ray_address="auto", tracking_uri="http://147.32.83.171:2222", experiment_name="krutsma1-gnn-comb-opt",
+                visualize=parsed_args.visualize
+            )
+        else:
+            best_training_loss, best_prediction, improvement_to_solver = SimpleRunner.run(
+                parsed_args, exp_dataset, rnd_seed, visualize=parsed_args.visualize
+            )
 
-            improvement_nn_solver.append(size_mis - ind_set_nx_size)
-        improvements.append(improvement_nn_solver)
+        losses_ls.append(best_training_loss)
+        predictions_ls.append(best_prediction)
+        improvements_ls.append(improvement_to_solver)
 
     print('\n')
-    losses = np.array(losses)
-    train_loss_mean = np.mean(losses, axis=0)
-    train_loss_std = np.sqrt(np.var(losses, axis=0))
-    print(f'Mean loss across {parsed_args.rnd_seeds} seeds: {train_loss_mean:.4f} +/- {train_loss_std:.4f}')
-
-    improvements = np.array(improvements)
-    improved, worsened, equal = improvements[improvements > 0], improvements[improvements < 0], improvements[np.isclose(improvements, 0)]
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=RuntimeWarning)
-        print(f'Neural network found '
-              f'better solution in {len(improved)} case(s) (avg. {np.nan_to_num(improved.mean()):.4f} +- {np.nan_to_num(improved.std()):.4f}), '
-              f'worse solution in {len(worsened)} case(s) (avg. {np.nan_to_num(worsened.mean()):.4f} +- {np.nan_to_num(worsened.std()):.4f}), '
-              f'and equal solution in {len(equal)} case(s)')
+    evaluate_final_results(losses_ls, improvements_ls, len(rnd_seeds))
