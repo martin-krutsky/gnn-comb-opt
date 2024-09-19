@@ -2,7 +2,7 @@ from ray import tune
 
 gcn_hyperparams_mapper = {
     'GCNConv': {
-        "add_self_loop": tune.choice([True, False]),
+        "add_self_loops": tune.choice([True, False]),
         "improved": tune.choice([True, False]),
         "normalize": tune.choice([True, False]),
     },
@@ -17,7 +17,7 @@ gcn_hyperparams_mapper = {
     'GATv2Conv': {
         "heads": tune.choice([1, 2, 4]),
         "concat": tune.choice([True, False]),
-        "add_self_loop": tune.choice([True, False]),
+        "add_self_loops": tune.choice([True, False]),
         "share_weights": tune.choice([True, False]),
         "residual": tune.choice([True, False]),
     },
@@ -41,7 +41,7 @@ gcn_hyperparams_mapper = {
 
 hyperparams_config = {
     "lr": tune.loguniform(0.00005, 0.001),
-    "weight_decay": tune.choice(0.0, 1e-5, 1e-4),
+    "weight_decay": tune.choice([0.0, 1e-5, 1e-4]),
     "embedding_size": tune.choice([5, 10, 20, 50, 100]),
     "hidden_channels": tune.choice([5, 10, 20, 50, 100]),
     "dropout": tune.choice([0.0, 0.1, 0.2, 0.4, 0.3, 0.5]),

@@ -11,7 +11,7 @@ from torch.nn import Module
 from torch.optim import Optimizer
 import torch_geometric.nn as pyg_nn
 from torch_geometric.data import Data, Dataset
-from torch_geometric.nn import MessagePassing
+from torch_geometric.nn.conv import MessagePassing
 
 import models
 from models.abstract.abstract_gnn import AbstractGNN

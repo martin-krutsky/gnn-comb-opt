@@ -2,12 +2,11 @@ import os
 import tempfile
 from argparse import Namespace
 from datetime import datetime
-from functools import partialmethod
 
 import mlflow
 import ray
 import torch
-from ray.air.integrations.mlflow import MLflowLoggerCallback, setup_mlflow
+from ray.air.integrations.mlflow import setup_mlflow
 from ray.train import Checkpoint
 from ray.tune.schedulers import ASHAScheduler, TrialScheduler
 from torch_geometric.data import Dataset
@@ -27,21 +26,22 @@ class RayRunner(Runner):
         dataloader = DataLoader(dataset, batch_size=dataset_size, shuffle=False)
         is_batch = dataset_size > 1
 
+        if not retraining_model:
+            setup_mlflow(
+                config,
+                experiment_name=experiment_name,
+                tracking_uri=tracking_uri,
+                run_name=run_name
+            )
+
         model_hyperparams = {
             "n_nodes": args.problem_size,
             "in_feats": config["embedding_size"],
             "hidden_channels": config["hidden_channels"],
             "number_classes": dataset.domain.num_classes,
             "dropout": config["dropout"],
+            "gcn_layer_kwargs": config["gcn_layer"]["hyperparams"],
         }
-
-        setup_mlflow(
-            config,
-            experiment_name=experiment_name,
-            tracking_uri=tracking_uri,
-            run_name=run_name
-        )
-
         model_cls, gcn_cls = cls.get_torch_classes(args.model_cls, config["gcn_layer"]["layer_name"])
         model: AbstractGNN = model_cls(gcn_cls, **model_hyperparams, device=args.device).type(args.data_type).to(
             args.device)
@@ -64,6 +64,7 @@ class RayRunner(Runner):
                     optimizer.load_state_dict(optimizer_state)
 
         best_train_loss = float('inf')
+        best_bit_prediction = torch.zeros((dataset[0].num_nodes,)).type(args.data_type).to(args.device)
         no_improv_counter = 0
         small_change_counter = 0
         last_loss = None
@@ -76,7 +77,7 @@ class RayRunner(Runner):
             prediction = cls.predict(model, full_batch, args.assignment_threshold)
             mlflow.log_metrics({
                 "train_loss": train_loss,
-                "prediction": prediction,
+                "prediction": prediction.sum(),
             }, step=epoch)
 
             if (epoch % min(1000, int(args.epochs // 10))) == 0:
@@ -85,6 +86,7 @@ class RayRunner(Runner):
             new_best_trigger = train_loss < best_train_loss
             if new_best_trigger:
                 best_train_loss = train_loss
+                best_bit_prediction = prediction
                 no_improv_counter = 0
             else:
                 no_improv_counter += 1
@@ -111,16 +113,18 @@ class RayRunner(Runner):
                     )
                     checkpoint = Checkpoint.from_directory(temp_checkpoint_dir)
                     ray.train.report(
-                        {"loss": last_loss, "accuracy": prediction},
+                        {"loss": last_loss, "accuracy": prediction.numpy().tolist()},
                         checkpoint=checkpoint,
                     )
 
         if retraining_model:
             cls.hash_save_model(model, model_hyperparams, optimizer_params, args, seed)
 
+        return best_train_loss, best_bit_prediction
+
     @classmethod
     def run(cls, args: Namespace, dataset: Dataset, seed: int, ray_address: str, tracking_uri: str, experiment_name: str,
-            visualize: bool = False):
+            num_raytune_samples: int = 10, visualize: bool = False):
         cls.set_seed(seed)
         time_str = datetime.now().strftime("%d-%m-%Y,%H:%M:%S")
         run_name = f"{args.domain}_{time_str}"
@@ -130,8 +134,10 @@ class RayRunner(Runner):
         mlflow.set_experiment(experiment_name=experiment_name)
 
         ray.init(address=ray_address, ignore_reinit_error=True, log_to_driver=False)
-        train_func = partialmethod(cls.train, cls=cls, tracking_uri=tracking_uri, experiment_name=experiment_name,
-                                   run_name=run_name, args=args, dataset=dataset, seed=seed)
+
+        def train_func(config: dict):
+            _, _ = cls.train(config=config, tracking_uri=tracking_uri, experiment_name=experiment_name,
+                             run_name=run_name, args=args, dataset=dataset, seed=seed, retraining_model=False)
 
         scheduler: TrialScheduler = ASHAScheduler(
             max_t=args.epochs,
@@ -141,17 +147,19 @@ class RayRunner(Runner):
         tuner = ray.tune.Tuner(
             ray.tune.with_resources(
                 ray.tune.with_parameters(train_func),
-                resources={"cpu": 2}
+                resources={"cpu": 0.5}
             ),
             tune_config=ray.tune.TuneConfig(
                 metric="loss",
                 mode="min",
                 scheduler=scheduler,
-                num_samples=2,
+                num_samples=num_samples,
+                trial_dirname_creator=lambda trial: trial.trial_id,
             ),
             run_config=ray.train.RunConfig(
                 name=experiment_name,
                 storage_path=log_dir,
+                log_to_file=True
                 # callbacks=[
                 #     MLflowLoggerCallback(
                 #         tracking_uri=tracking_uri,
@@ -171,6 +179,7 @@ class RayRunner(Runner):
         print("Best trial final accuracy: {}".format(best_result.metrics["accuracy"]))
 
         print("Retraining with best params...")
-        best_loss, best_pred = cls.train(best_config, args, dataset, seed, save_model=True)
-        improvement = cls.postprocess(dataset, best_pred)
+        best_loss, best_pred = cls.train(config=best_config, tracking_uri=tracking_uri, experiment_name=experiment_name,
+                                         run_name=run_name, args=args, dataset=dataset, seed=seed, retraining_model=True)
+        improvement = cls.postprocess(dataset, best_pred, visualize=visualize)
         return best_loss, best_pred, improvement

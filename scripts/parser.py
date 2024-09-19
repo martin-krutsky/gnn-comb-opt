@@ -1,8 +1,10 @@
 import argparse
+import json
 
 import numpy as np
 
 from runners.config.ray_config import gcn_hyperparams_mapper
+
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
@@ -43,6 +45,7 @@ def get_parser() -> argparse.ArgumentParser:
         # 'PNAConv', 'ClusterGCNConv', 'GENConv', 'GCN2Conv', 'PANConv', 'WLConv', 'FiLMConv', 'SuperGATConv', 'FAConv',
         # 'EGConv', 'PDNConv', 'GeneralConv'
     ], default='GCNConv')
+    parser.add_argument('--gcn_layer_kwargs', type=json.loads, default={'add_self_loops': False})
 
     # Experiment params
     parser.add_argument('--data_size', type=int, default=1)
@@ -52,7 +55,10 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('--cuda', type=int, default=0)
     parser.add_argument('--data_type', type=str, choices=['float32', 'float64'], default='float32')
 
-    parser.add_argument('--use_ray_tune', type=bool, default=False)
-    parser.add_argument('--visualize', type=bool, default=False)
+    # flags
+    parser.add_argument('--use_ray_tune', action='store_true')
+    parser.add_argument('--visualize', action='store_true')
+
+    parser.add_argument('--num_raytune_samples', type=int, default=10)
 
     return parser

@@ -1,13 +1,11 @@
 from argparse import Namespace
 
 import torch
-from torch_geometric.data import Data, Dataset
+from torch_geometric.data import Dataset
 from torch_geometric.loader import DataLoader
-from torch_geometric.nn.conv import MessagePassing
 
 from models.abstract.abstract_gnn import AbstractGNN
 from runners.abstract.runner import Runner
-from utils.data import visualize_graph
 from utils.loss import loss_func
 
 
@@ -23,7 +21,8 @@ class SimpleRunner(Runner):
             "in_feats": args.embedding_size,
             "hidden_channels": args.hidden_channels,
             "number_classes": dataset.domain.num_classes,
-            "dropout": args.dropout
+            "dropout": args.dropout,
+            "gcn_layer_kwargs": args.gcn_layer_kwargs,
         }
         model_cls, gcn_cls = SimpleRunner.get_torch_classes(args.model_cls, args.gcn_cls)
 
@@ -87,5 +86,5 @@ class SimpleRunner(Runner):
         cls.set_seed(seed)
         print(f'Training with random seed {seed}...')
         best_loss, best_pred = cls.train(args, dataset, seed, save_model=True)
-        improvement = cls.postprocess(dataset, best_pred)
+        improvement = cls.postprocess(dataset, best_pred, visualize=visualize)
         return best_loss, best_pred, improvement

@@ -1,18 +1,18 @@
-from email.headerregistry import MessageIDHeader
+from typing import Any
 
 import torch
 from torch import nn
 import torch.nn.functional as F
 
 from torch_geometric.data import Data
-from torch_geometric.nn import MessagePassing
+from torch_geometric.nn.conv import MessagePassing
 
 from models.abstract.abstract_gnn import AbstractGNN
 
 
 class GNN(AbstractGNN):
     def __init__(self, gnn_layer_cls: type[MessagePassing], n_nodes: int, in_feats: int, hidden_channels: int,
-                 number_classes: int, dropout: float, device: torch.device):
+                 number_classes: int, dropout: float, device: torch.device, gcn_layer_kwargs: dict[str, Any] = None):
         """
         Initialize a new instance of the GNN model of provided size.
         Dropout is added in forward step.
@@ -25,8 +25,8 @@ class GNN(AbstractGNN):
         """
         super(GNN, self).__init__(gnn_layer_cls, n_nodes, in_feats, hidden_channels, number_classes, dropout, device)
         self.embed = nn.Embedding(n_nodes, in_feats)
-        self.conv1 = gnn_layer_cls(in_feats, hidden_channels, add_self_loops=False).to(device)
-        self.conv2 = gnn_layer_cls(hidden_channels, number_classes, add_self_loops=False).to(device)
+        self.conv1 = gnn_layer_cls(in_channels=in_feats, out_channels=hidden_channels, **gcn_layer_kwargs).to(device)
+        self.conv2 = gnn_layer_cls(in_channels=hidden_channels, out_channels=number_classes, **gcn_layer_kwargs).to(device)
 
     def forward(self, graph_data: Data) -> torch.Tensor:
         """

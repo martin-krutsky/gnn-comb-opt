@@ -6,7 +6,7 @@ import torch
 from torch.nn import Module
 import torch_geometric.nn as pyg_nn
 from torch_geometric.data import Data
-from torch_geometric.nn import MessagePassing
+from torch_geometric.nn.conv import MessagePassing
 
 import domains
 import models

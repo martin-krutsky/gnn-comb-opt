@@ -51,8 +51,8 @@ if __name__ == '__main__':
 
     losses_ls, predictions_ls, improvements_ls = [], [], []
 
-    if parsed_args.seed is None and parsed_args.seed_list is not None:
-        rnd_seeds = list(range(parsed_args.seed_list))
+    if parsed_args.seed is None and parsed_args.rnd_seeds is not None:
+        rnd_seeds = list(range(parsed_args.rnd_seeds))
     else:
         rnd_seeds = [parsed_args.seed]
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
             best_training_loss, best_prediction, improvement_to_solver = RayRunner.run(
                 parsed_args, exp_dataset, rnd_seed,
                 ray_address="auto", tracking_uri="http://147.32.83.171:2222", experiment_name="krutsma1-gnn-comb-opt",
-                visualize=parsed_args.visualize
+                num_raytune_samples=parsed_args.num_raytune_samples, visualize=False
             )
         else:
             best_training_loss, best_prediction, improvement_to_solver = SimpleRunner.run(
