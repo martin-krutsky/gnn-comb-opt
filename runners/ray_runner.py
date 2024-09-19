@@ -153,7 +153,7 @@ class RayRunner(Runner):
                 metric="loss",
                 mode="min",
                 scheduler=scheduler,
-                num_samples=num_samples,
+                num_samples=num_raytune_samples,
                 trial_dirname_creator=lambda trial: trial.trial_id,
             ),
             run_config=ray.train.RunConfig(
