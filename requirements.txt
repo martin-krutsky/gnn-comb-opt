@@ -1,7 +1,7 @@
 GitPython==3.1.43
 matplotlib==3.9.2
 mlflow==2.16.0
-networkx==3.3
+networkx==3.2
 numpy==2.1.1
 onnx2torch==1.5.15
 ray==2.35.0
