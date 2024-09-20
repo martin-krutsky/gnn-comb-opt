@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#SBATCH --partition=cpufast
+#SBATCH --time=4:00:00
+
+#SBATCH --exclude=n[33]
+#SBATCH --job-name=gnn_co_tuning
+#SBATCH --output=job_outputs/gnn_co_tuning1.out
+#SBATCH --error=job_outputs/gnn_co_tuning1.err
+#SBATCH --mem=10G
+#SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=4
+
+
+source venv/bin/activate
+export PYTHONPATH=/home/souregus/mkrutsky/gnn-comb-opt:$PYTHONPATH
+srun -p cpufast --unbuffered -l python scripts/run.py --rnd_seeds 1 --use_ray_tune --num_raytune_samples 20
