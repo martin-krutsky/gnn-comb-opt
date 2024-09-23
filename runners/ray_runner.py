@@ -15,7 +15,7 @@ from torch_geometric.loader import DataLoader
 from models.abstract.abstract_gnn import AbstractGNN
 from runners.abstract.runner import Runner
 from runners.config.ray_config import hyperparams_config
-from utils.loss import loss_func
+from utils.loss import loss_qubo
 
 
 class RayRunner(Runner):
@@ -73,7 +73,7 @@ class RayRunner(Runner):
         for epoch in range(1, args.epochs + 1):
             full_batch = next(iter(dataloader))
             full_batch.to(args.device)
-            train_loss = cls.train_step(model, loss_func, optimizer, full_batch, is_batch=is_batch)
+            train_loss = cls.train_step(model, loss_qubo, optimizer, full_batch, is_batch=is_batch)
             prediction = cls.predict(model, full_batch, args.assignment_threshold)
             mlflow.log_metrics({
                 "train_loss": train_loss,
