@@ -60,7 +60,7 @@ if __name__ == '__main__':
         if parsed_args.use_ray_tune:
             best_training_loss, best_prediction, improvement_to_solver = RayRunner.run(
                 parsed_args, exp_dataset, rnd_seed,
-                ray_address="auto", tracking_uri="http://147.32.83.171:2222", experiment_name="krutsma1-gnn-comb-opt",
+                ray_address="auto", tracking_uri=parsed_args.tracking_uri, experiment_name="krutsma1-gnn-comb-opt",
                 num_raytune_samples=parsed_args.num_raytune_samples, visualize=False
             )
         else:
