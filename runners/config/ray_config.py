@@ -1,10 +1,16 @@
 from ray import tune
 
+
+def conditional_selfloop(spec):
+    normalize = spec.config.normalize
+    return tune.choice([True, False]) if normalize else False
+
+
 gcn_hyperparams_mapper = {
     'GCNConv': {
-        "add_self_loops": tune.choice([True, False]),
         "improved": tune.choice([True, False]),
         "normalize": tune.choice([True, False]),
+        "add_self_loops": tune.sample_from(conditional_selfloop),
     },
     'SAGEConv': {
         "aggr": tune.choice(['mean', 'max', 'lstm']),
