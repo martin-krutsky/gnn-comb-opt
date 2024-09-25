@@ -31,6 +31,7 @@ def get_parser() -> argparse.ArgumentParser:
     DEFAULT_EMBEDDING_SIZE = int(np.sqrt(DEFAULT_PROBLEM_SIZE))
     DEFAULT_HIDDEN_SIZE = int(DEFAULT_EMBEDDING_SIZE / 2)
     # Model hyperparams
+    parser.add_argument('--loss', type=str, choices=['loss_qubo', 'loss_linear_interp'], default='loss_qubo')
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--weight_decay', type=float, default=0)
     parser.add_argument('--embedding_size', type=int, default=DEFAULT_EMBEDDING_SIZE)

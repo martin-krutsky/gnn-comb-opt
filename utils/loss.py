@@ -23,7 +23,7 @@ def loss_qubo(probs: torch.Tensor, q_mat: torch.Tensor, is_batch: bool = False) 
     return cost
 
 
-def loss_linterp(probs: torch.Tensor, q_mat: torch.Tensor, is_batch: bool = False) -> torch.Tensor:
+def loss_linear_interp(probs: torch.Tensor, q_mat: torch.Tensor, is_batch: bool = False) -> torch.Tensor:
     if is_batch:
         problem_size = q_mat.shape[1]
         probs_ = probs.reshape(-1, problem_size)
