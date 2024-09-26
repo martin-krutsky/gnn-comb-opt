@@ -1,16 +1,11 @@
 from ray import tune
 
 
-def conditional_selfloop(spec):
-    normalize = spec.config.normalize
-    return tune.choice([True, False]) if normalize else False
-
-
 gcn_hyperparams_mapper = {
     'GCNConv': {
         "improved": tune.choice([True, False]),
-        "normalize": tune.choice([True, False]),
-        "add_self_loops": tune.sample_from(conditional_selfloop),
+        # "normalize": tune.choice([True, False]),
+        "add_self_loops": tune.choice([True, False]),
     },
     'SAGEConv': {
         "aggr": tune.choice(['mean', 'max', 'lstm']),
@@ -22,14 +17,14 @@ gcn_hyperparams_mapper = {
     },
     'GATv2Conv': {
         "heads": tune.choice([1, 2, 4]),
-        "concat": tune.choice([True, False]),
+        "concat": False,
         "add_self_loops": tune.choice([True, False]),
         "share_weights": tune.choice([True, False]),
-        "residual": tune.choice([True, False]),
+        # "residual": tune.choice([True, False]),
     },
     'TransformerConv': {
         "heads": tune.choice([1, 2, 4]),
-        "concat": tune.choice([True, False]),
+        "concat": False,
     },
     'GENConv': {
         "aggr": tune.choice(['softmax', 'powermean', 'add', 'mean', 'max']),

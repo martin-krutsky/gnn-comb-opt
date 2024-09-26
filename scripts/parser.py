@@ -15,7 +15,7 @@ def get_parser() -> argparse.ArgumentParser:
 
     # Optimization params
     parser.add_argument('--epochs', type=int, default=int(1e5))
-    parser.add_argument('--early_stopping_patience', type=int, default=100)
+    parser.add_argument('--early_stopping_patience', type=int, default=500)
     parser.add_argument('--early_stopping_small_diff', type=float, default=1e-4)
     parser.add_argument('--stop_strategy', type=str, choices=['loss'], default='loss')
     parser.add_argument('--assignment_threshold', type=float, default=0.5)

@@ -7,3 +7,5 @@ bin/
 datasets/
 logs/
 job_outputs/
+
+mlruns.db
