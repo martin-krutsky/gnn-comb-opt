@@ -58,6 +58,7 @@ def get_parser() -> argparse.ArgumentParser:
 
     # flags
     parser.add_argument('--use_ray_tune', action='store_true')
+    parser.add_argument('--ray_address', type=str, default='auto')
     parser.add_argument('--tracking_uri', type=str, choices=['http://147.32.83.171:2222', 'sqlite:///mlruns.db'], default='http://147.32.83.171:2222')
     parser.add_argument('--visualize', action='store_true')
 

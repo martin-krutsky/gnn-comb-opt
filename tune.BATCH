@@ -6,8 +6,9 @@
 #SBATCH --exclude=n[33]
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=10
-#SBATCH --mem-per-cpu=1G
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=20G
+#SBATCH --exclusive
 #SBATCH --partition=cpufast
 #SBATCH --time=4:00:00
 
@@ -26,7 +27,7 @@ head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname --ip-address)
 # if we detect a space character in the head node IP, we'll
 # convert it to an ipv4 address. This step is optional.
 if [[ "$head_node_ip" == *" "* ]]; then
-  IFS=' ' read -ra ADDR <<<"$head_node_ip"
+  IFS=' ' read -ra ADDR <<< "$head_node_ip"
   if [[ ${#ADDR[0]} -gt 16 ]]; then
     head_node_ip=${ADDR[1]}
   else
@@ -35,20 +36,42 @@ if [[ "$head_node_ip" == *" "* ]]; then
   echo "IPV6 address detected. We split the IPV4 address as $head_node_ip"
 fi
 
-port=6379
+port=6380
 ip_head=$head_node_ip:$port
 export ip_head
 echo "IP Head: $ip_head"
 
 echo "cpus per task $SLURM_CPUS_PER_TASK"
 
-echo "Starting HEAD at $head_node"
+echo "Starting HEAD at node $head_node"
 srun --job-name="ray-head" --nodes=1 --ntasks=1 -w "$head_node" \
     ray start --head --node-ip-address="$head_node_ip" --port=$port \
-    --num-cpus "${SLURM_CPUS_PER_TASK}" --num-gpus "${SLURM_GPUS_PER_TASK}" --block &
+    --num-cpus=$((SLURM_CPUS_PER_TASK)) --temp-dir="/home/krutsma1/tmp/ray" --block &
+ray_head=$!
 
 # optional, though may be useful in certain versions of Ray < 1.0.
 sleep 10
 
+# ray_workers=()
+# worker_num=$((SLURM_JOB_NUM_NODES - 1))
+
+# for ((i = 1; i <= worker_num; i++)); do
+#   node_i=${nodes_array[$i]}
+#   echo "STARTING WORKER $i at node $node_i"
+#   srun --job-name="ray-worker" --nodes=1 --ntasks=1 -w "$node_i" \
+#       ray start --address=$ip_head --num-cpus=$SLURM_CPUS_PER_TASK --block &
+#   ray_workers+=$!
+#   sleep 5
+# done
+
+echo "Running training script"
 export PYTHONPATH=/home/souregus/mkrutsky/gnn-comb-opt:$PYTHONPATH
-srun -p cpufast --unbuffered -l python scripts/run.py --rnd_seeds 1 --use_ray_tune --tracking_uri sqlite:///mlruns.db --num_raytune_samples 200
+python -u scripts/run.py --rnd_seeds 1 --use_ray_tune --ray_address=${ip_head} --tracking_uri sqlite:///mlruns.db --num_raytune_samples 500
+run_pid=$!
+wait $run_pid
+
+for worker in "${ray_workers[@]}"
+do
+  kill $worker
+done
+kill $ray_head
