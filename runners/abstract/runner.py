@@ -85,6 +85,7 @@ class Runner(ABC):
     @staticmethod
     def postprocess(dataset: Dataset, prediction, visualize: bool = False):
         improvement = []
+        prediction = prediction.reshape(len(dataset), -1)
         for datapoint, pred in zip(dataset, prediction):
             # compute correctness of the neural prediction
             size_mis, ind_set, number_violations = dataset.domain.postprocess_gnn(pred, datapoint.nx_graph)

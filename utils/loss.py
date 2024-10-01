@@ -39,8 +39,8 @@ def loss_linear_interp(probs: torch.Tensor, q_mat: torch.Tensor, is_batch: bool 
         max_q = torch.maximum(torch.zeros(q_mat.size()), q_mat)
         min_q = torch.minimum(torch.zeros(q_mat.size()), q_mat)
 
-        x_rows = probs.repeat(probs.shape[0], 1)
-        x_cols = probs.repeat(1, probs.shape[0])
+        x_rows = probs.unsqueeze(0).repeat(probs.shape[0], 1)
+        x_cols = probs.unsqueeze(1).repeat(1, probs.shape[0])
         max_xs = torch.maximum(torch.zeros(q_mat.size()), x_rows + x_cols - 1)
 
     mat_res = (max_q + min_q) * max_xs

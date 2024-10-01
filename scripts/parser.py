@@ -22,7 +22,7 @@ def get_parser() -> argparse.ArgumentParser:
 
     DEFAULT_PROBLEM_SIZE = 100
     # Domain params
-    parser.add_argument('--domain', choices=['MIS'], default='MIS')
+    parser.add_argument('--domain', choices=['MIS', "MaxCut"], default='MIS')
     parser.add_argument('--problem_size', type=int, default=DEFAULT_PROBLEM_SIZE)
     parser.add_argument('--node_degree', type=int, default=3)
     parser.add_argument('--graph_type', type=str, choices=['reg', 'prob', 'erdos'], default='reg')
@@ -37,7 +37,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('--embedding_size', type=int, default=DEFAULT_EMBEDDING_SIZE)
     parser.add_argument('--hidden_channels', type=int, default=DEFAULT_HIDDEN_SIZE)
     parser.add_argument('--dropout', type=float, default=0.0)
-    # parser.add_argument('--layers', type=int, default=2)
+    parser.add_argument('--layers', type=int, default=2)
     parser.add_argument('--gcn_cls', type=str, choices=[
         *gcn_hyperparams_mapper.keys()
         # 'GCNConv', 'ChebConv', 'SAGEConv', 'GraphConv', 'GatedGraphConv', 'ResGatedGraphConv', 'GATConv', 'GATv2Conv',
