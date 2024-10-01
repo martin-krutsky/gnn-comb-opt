@@ -8,4 +8,5 @@ datasets/
 logs/
 job_outputs/
 
+mlruns/
 mlruns.db
