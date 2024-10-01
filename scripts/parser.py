@@ -34,10 +34,10 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('--loss', type=str, choices=['loss_qubo', 'loss_linear_interp'], default='loss_qubo')
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--weight_decay', type=float, default=0)
+    parser.add_argument('--n_layers', type=int, default=2)
     parser.add_argument('--embedding_size', type=int, default=DEFAULT_EMBEDDING_SIZE)
     parser.add_argument('--hidden_channels', type=int, default=DEFAULT_HIDDEN_SIZE)
     parser.add_argument('--dropout', type=float, default=0.0)
-    parser.add_argument('--layers', type=int, default=2)
     parser.add_argument('--gcn_cls', type=str, choices=[
         *gcn_hyperparams_mapper.keys()
         # 'GCNConv', 'ChebConv', 'SAGEConv', 'GraphConv', 'GatedGraphConv', 'ResGatedGraphConv', 'GATConv', 'GATv2Conv',

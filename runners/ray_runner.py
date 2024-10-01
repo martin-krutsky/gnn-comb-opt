@@ -36,6 +36,7 @@ class RayRunner(Runner):
             )
 
         model_hyperparams = {
+            "n_layers": config["n_layers"],
             "n_nodes": args.problem_size,
             "in_feats": config["embedding_size"],
             "hidden_channels": config["hidden_channels"],

@@ -18,6 +18,7 @@ class SimpleRunner(Runner):
         is_batch = dataset_size > 1
 
         model_hyperparams = {
+            "n_layers": args.n_layers,
             "n_nodes": args.problem_size,
             "in_feats": args.embedding_size,
             "hidden_channels": args.hidden_channels,
