@@ -41,7 +41,7 @@ gcn_hyperparams_mapper = {
 }
 
 hyperparams_config = {
-    "lr": tune.loguniform(0.00005, 0.01),
+    "lr": tune.choice(0.00005, 0.0001, 0.0005, 0.001, 0.005, 0.01),
     "weight_decay": tune.choice([0.0, 1e-5, 1e-4, 1e-3]),
     "embedding_size": tune.choice([5, 10, 20, 50, 100, 200]),
     "n_layers": tune.choice([2, 3, 4]),

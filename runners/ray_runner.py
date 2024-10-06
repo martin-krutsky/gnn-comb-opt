@@ -95,17 +95,17 @@ class RayRunner(Runner):
             else:
                 no_improv_counter += 1
 
-            if last_loss is not None and abs(train_loss - last_loss) < args.early_stopping_small_diff:
-                small_change_counter += 1
-            else:
-                small_change_counter = 0
-
-            if no_improv_counter >= args.early_stopping_patience:
-                print("Early stopping triggered due to no improvement")
-                break
-            if small_change_counter >= args.early_stopping_patience:
-                print("Early stopping triggered due to small changes")
-                break
+            # if last_loss is not None and abs(train_loss - last_loss) < args.early_stopping_small_diff:
+            #     small_change_counter += 1
+            # else:
+            #     small_change_counter = 0
+            #
+            # if no_improv_counter >= args.early_stopping_patience:
+            #     print("Early stopping triggered due to no improvement")
+            #     break
+            # if small_change_counter >= args.early_stopping_patience:
+            #     print("Early stopping triggered due to small changes")
+            #     break
 
             last_loss = train_loss
 
