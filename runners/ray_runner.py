@@ -7,7 +7,7 @@ from typing import Callable
 import mlflow
 import ray
 import torch
-from ray.air.integrations.mlflow import setup_mlflow
+from ray.air.integrations.mlflow import setup_mlflow, MLflowLoggerCallback
 from ray.train import Checkpoint
 from ray.tune.schedulers import ASHAScheduler, TrialScheduler
 from torch_geometric.data import Dataset
@@ -78,10 +78,11 @@ class RayRunner(Runner):
             full_batch.to(args.device)
             train_loss = cls.train_step(model, loss, optimizer, full_batch, is_batch=is_batch)
             prediction = cls.predict(model, full_batch, args.assignment_threshold)
-            mlflow.log_metrics({
-                "train_loss": train_loss,
-                "prediction": prediction.sum(),
-            }, step=epoch)
+            if not retraining_model:
+                mlflow.log_metrics({
+                    "train_loss": train_loss,
+                    "prediction": prediction.sum(),
+                }, step=epoch)
 
             if (epoch % min(1000, int(args.epochs // 10))) == 0:
                 print(f'Epoch: {epoch}, Loss: {train_loss}')
@@ -162,14 +163,14 @@ class RayRunner(Runner):
             run_config=ray.train.RunConfig(
                 name=experiment_name,
                 storage_path=log_dir,
-                log_to_file=True
-                # callbacks=[
-                #     MLflowLoggerCallback(
-                #         tracking_uri=tracking_uri,
-                #         experiment_name=experiment_name,
-                #         save_artifact=True,
-                #     )
-                # ],
+                log_to_file=True,
+                callbacks=[
+                    MLflowLoggerCallback(
+                        tracking_uri=tracking_uri,
+                        experiment_name=experiment_name,
+                        save_artifact=True,
+                    )
+                ],
             ),
             param_space=hyperparams_config,
         )

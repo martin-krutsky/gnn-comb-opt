@@ -41,11 +41,11 @@ gcn_hyperparams_mapper = {
 }
 
 hyperparams_config = {
-    "lr": tune.loguniform(0.00005, 0.001),
-    "weight_decay": tune.choice([0.0, 1e-5, 1e-4]),
-    "embedding_size": tune.choice([5, 10, 20, 50, 100]),
+    "lr": tune.loguniform(0.00005, 0.01),
+    "weight_decay": tune.choice([0.0, 1e-5, 1e-4, 1e-3]),
+    "embedding_size": tune.choice([5, 10, 20, 50, 100, 200]),
     "n_layers": tune.choice([2, 3, 4]),
-    "hidden_channels": tune.choice([5, 10, 20, 50, 100]),
+    "hidden_channels": tune.choice([5, 10, 20, 50, 100, 200]),
     "dropout": tune.choice([0.0, 0.1, 0.2, 0.4, 0.3, 0.5]),
     "gcn_layer": tune.choice([{"layer_name": key, "hyperparams": values} for key, values in gcn_hyperparams_mapper.items()]),
 }
