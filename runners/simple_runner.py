@@ -13,6 +13,7 @@ import utils.loss as loss_module
 class SimpleRunner(Runner):
     @classmethod
     def train(cls, args: Namespace, dataset: Dataset, seed: int, save_model: bool = False) -> (float, torch.Tensor):
+        cls.set_seed(seed)
         dataset_size = len(dataset)
         dataloader = DataLoader(dataset, batch_size=dataset_size, shuffle=False)
         is_batch = dataset_size > 1
@@ -37,7 +38,6 @@ class SimpleRunner(Runner):
         optimizer: torch.optim.Optimizer = torch.optim.Adam(model.parameters(), **optimizer_params)
         loss: Callable[[torch.Tensor, torch.Tensor, bool], torch.Tensor] = getattr(loss_module, args.loss)
 
-        epoch = 0
         best_train_loss = float('inf')
         best_bit_prediction = torch.zeros((dataset[0].num_nodes,)).type(args.data_type).to(args.device)
         best_epoch = 0
@@ -86,7 +86,6 @@ class SimpleRunner(Runner):
 
     @classmethod
     def run(cls, args: Namespace, dataset: Dataset, seed: int, visualize: bool = False):
-        cls.set_seed(seed)
         print(f'Training with random seed {seed}...')
         best_loss, best_pred = cls.train(args, dataset, seed, save_model=True)
         improvement = cls.postprocess(dataset, best_pred, visualize=visualize)

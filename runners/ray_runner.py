@@ -23,6 +23,7 @@ class RayRunner(Runner):
     @classmethod
     def train(cls, config: dict, tracking_uri: str, experiment_name: str, run_name: str, args: Namespace, dataset: Dataset,
               seed: int, retraining_model: bool = False) -> (float, torch.Tensor):
+        cls.set_seed(seed)
         dataset_size = len(dataset)
         dataloader = DataLoader(dataset, batch_size=dataset_size, shuffle=False)
         is_batch = dataset_size > 1
@@ -47,7 +48,6 @@ class RayRunner(Runner):
         model_cls, gcn_cls = cls.get_torch_classes(args.model_cls, config["gcn_layer"]["layer_name"])
         model: AbstractGNN = model_cls(gcn_cls, **model_hyperparams, device=args.device).type(args.data_type).to(
             args.device)
-
         optimizer_params = {
             "lr": config["lr"],
             "weight_decay": config["weight_decay"],
@@ -95,17 +95,17 @@ class RayRunner(Runner):
             else:
                 no_improv_counter += 1
 
-            # if last_loss is not None and abs(train_loss - last_loss) < args.early_stopping_small_diff:
-            #     small_change_counter += 1
-            # else:
-            #     small_change_counter = 0
-            #
-            # if no_improv_counter >= args.early_stopping_patience:
-            #     print("Early stopping triggered due to no improvement")
-            #     break
-            # if small_change_counter >= args.early_stopping_patience:
-            #     print("Early stopping triggered due to small changes")
-            #     break
+            if last_loss is not None and abs(train_loss - last_loss) < args.early_stopping_small_diff:
+                small_change_counter += 1
+            else:
+                small_change_counter = 0
+
+            if no_improv_counter >= args.early_stopping_patience:
+                print("Early stopping triggered due to no improvement")
+                break
+            if small_change_counter >= args.early_stopping_patience:
+                print("Early stopping triggered due to small changes")
+                break
 
             last_loss = train_loss
 
@@ -129,7 +129,6 @@ class RayRunner(Runner):
     @classmethod
     def run(cls, args: Namespace, dataset: Dataset, seed: int, ray_address: str, tracking_uri: str, experiment_name: str,
             num_raytune_samples: int = 10, visualize: bool = False):
-        cls.set_seed(seed)
         time_str = datetime.now().strftime("%d-%m-%Y,%H:%M:%S")
         run_name = f"{args.domain}_{time_str}"
         log_dir = os.path.join(os.getcwd(), "logs")

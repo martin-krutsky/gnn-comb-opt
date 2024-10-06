@@ -66,7 +66,7 @@ sleep 10
 
 echo "Running training script"
 export PYTHONPATH=/home/krutsma1/gnn-comb-opt:$PYTHONPATH
-python -u scripts/run.py --rnd_seeds 1 --use_ray_tune --ray_address=${ip_head} --tracking_uri="" --num_raytune_samples 5000
+python -u scripts/run.py --rnd_seeds 1 --use_ray_tune --ray_address=${ip_head} --tracking_uri=sqlite:///mlruns.db --num_raytune_samples 1000
 run_pid=$!
 wait $run_pid
 
