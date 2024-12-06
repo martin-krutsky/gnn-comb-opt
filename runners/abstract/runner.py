@@ -6,6 +6,8 @@ import hashlib
 from typing import Callable
 
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import torch
 from torch.nn import Module
 from torch.optim import Optimizer
@@ -100,8 +102,23 @@ class Runner(ABC):
             print(
                 f'{dataset.domain.criterion_name} found by solver is {ind_set_nx_size} with {number_violations} violations')
 
-            improvement.append(size_mis - ind_set_nx_size)
+            imp = size_mis - ind_set_nx_size if dataset.domain.maximization else ind_set_nx_size - size_mis
+            improvement.append(imp)
         return improvement
+
+    @staticmethod
+    def postprocess_animate(dataset: Dataset, predictions):
+        def animate(i):
+            nodes = visualize_graph(dataset[0].nx_graph, predictions[i].squeeze(), animate=True)
+            return nodes,
+
+        fig = plt.gcf()
+        anim = animation.FuncAnimation(fig, animate, frames=len(predictions), blit=True, interval=50, repeat_delay=1000)
+        mywriter = animation.FFMpegWriter(fps=1)
+        anim.save("movie.mp4", writer=mywriter)
+        plt.cla()
+        plt.clf()
+        # plt.show()
 
     @classmethod
     @abstractmethod

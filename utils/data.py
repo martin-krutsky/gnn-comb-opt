@@ -50,8 +50,16 @@ def generate_graph(n: int, d: int = None, p: float = None, graph_type: str = 're
     return nx_graph
 
 
-def visualize_graph(nx_graph: nx.Graph, bitstrings: Optional[torch.Tensor] = None):
+def visualize_graph(nx_graph: nx.Graph, bitstrings: torch.Tensor | None = None, animate=False):
+    plt.cla()
     pos = nx.kamada_kawai_layout(nx_graph)
+    if animate:
+        color_map = ['orange' if (bitstrings[node] == 0) else 'lightblue' for node in nx_graph.nodes]
+        nodes = nx.draw_networkx_nodes(nx_graph, pos, node_color=color_map)
+        nx.draw_networkx_labels(nx_graph, pos)
+        _ = nx.draw_networkx_edges(nx_graph, pos)
+        return nodes
+
     if bitstrings is None:
         nx.draw(nx_graph, pos=pos, with_labels=True)
     else:

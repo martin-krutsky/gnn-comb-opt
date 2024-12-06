@@ -1,5 +1,5 @@
 from argparse import Namespace
-from typing import Callable
+from typing import Callable, List, Tuple
 
 import torch
 from torch_geometric.data import Dataset
@@ -12,7 +12,8 @@ import utils.loss as loss_module
 
 class SimpleRunner(Runner):
     @classmethod
-    def train(cls, args: Namespace, dataset: Dataset, seed: int, save_model: bool = False) -> (float, torch.Tensor):
+    def train(cls, args: Namespace, dataset: Dataset, seed: int, save_model: bool = False,
+              visualize: bool = False) -> Tuple[float, torch.Tensor, List[torch.Tensor]] | Tuple[float, torch.Tensor]:
         cls.set_seed(seed)
         dataset_size = len(dataset)
         dataloader = DataLoader(dataset, batch_size=dataset_size, shuffle=False)
@@ -44,6 +45,7 @@ class SimpleRunner(Runner):
         no_improv_counter = 0
         small_change_counter = 0
         last_loss = None
+        saved_predictions = []
 
         for epoch in range(1, args.epochs + 1):
             full_batch = next(iter(dataloader))
@@ -53,6 +55,8 @@ class SimpleRunner(Runner):
 
             if (epoch % min(1000, int(args.epochs // 10))) == 0:
                 print(f'Epoch: {epoch}, Loss: {train_loss}')
+                if visualize:
+                    saved_predictions.append(prediction)
 
             new_best_trigger = train_loss < best_train_loss
             if new_best_trigger:
@@ -82,11 +86,14 @@ class SimpleRunner(Runner):
 
         print(f"Random seed {seed} | Epochs: {epoch} | Best epoch: {best_epoch}")
         print(f"Best loss: {best_train_loss:.4f}, last loss: {last_loss:.4f}")
-        return best_train_loss, best_bit_prediction
+
+        return best_train_loss, best_bit_prediction, saved_predictions
 
     @classmethod
     def run(cls, args: Namespace, dataset: Dataset, seed: int, visualize: bool = False):
         print(f'Training with random seed {seed}...')
-        best_loss, best_pred = cls.train(args, dataset, seed, save_model=True)
+        best_loss, best_pred, predictions = cls.train(args, dataset, seed, save_model=True, visualize=visualize)
+        if visualize and len(predictions) > 0:
+            cls.postprocess_animate(dataset, predictions)
         improvement = cls.postprocess(dataset, best_pred, visualize=visualize)
         return best_loss, best_pred, improvement

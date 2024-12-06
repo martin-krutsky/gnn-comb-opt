@@ -13,6 +13,7 @@ from utils.transform import gen_combinations
 class MIS(CODomain):
     num_classes = 1
     criterion_name = "Independence number"
+    maximization = True
 
     @staticmethod
     def gen_q_dict(nx_g: nx.Graph, penalty: int = 2) -> defaultdict:

@@ -4,18 +4,19 @@ import networkx as nx
 import torch
 from time import time
 
+from domains import MaxCut
 from domains.abstract.co_domain import CODomain
 
 
-class MaxCut(CODomain):
+class GraphPartition(MaxCut):
     num_classes = 1
-    criterion_name = "Cut size"
-    maximization = True
+    criterion_name = "Nr of divided edges"
+    maximization = False
 
     @staticmethod
-    def gen_q_dict(nx_g: nx.Graph, penalty: int = 2) -> defaultdict:
+    def gen_q_dict(nx_g: nx.Graph, penalty: int = 10) -> defaultdict:
         """
-        Helper function to generate QUBO matrix for Maximum Cut as minimization problem.
+        Helper function to generate QUBO matrix for Graph Partition as minimization problem.
 
         Input:
             nx_g: graph as networkx graph object (assumed to be unweigthed)
@@ -23,16 +24,15 @@ class MaxCut(CODomain):
             Q_dict: QUBO as defaultdict
         """
         # Initialize our Q matrix
-        q_dict = defaultdict(int)
+        q_dict = super().gen_q_dict(nx_g, penalty=penalty)
 
-        # Update Q matrix for every edge in the graph
-        # all off-diagonal terms get penalty
         for (u, v) in nx_g.edges:
-            q_dict[(u, v)] = penalty
-            q_dict[(v, u)] = penalty
+            if v > u:
+                q_dict[(u, v)] -= penalty * 2
 
-            q_dict[(u, u)] -= 1
-            q_dict[(v, v)] -= 1
+        nr_of_nodes = len(nx_g)
+        for u in nx_g.nodes:
+            q_dict[(u, u)] += penalty * (nr_of_nodes-1)
 
         return q_dict
 

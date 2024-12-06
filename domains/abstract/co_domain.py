@@ -16,6 +16,11 @@ class CODomain(ABC):
     def criterion_name(self) -> str:
         pass
 
+    @property
+    @abstractmethod
+    def maximization(self) -> bool:
+        pass
+
     @staticmethod
     @abstractmethod
     def gen_q_dict(nx_g: nx.Graph, penalty: int = 2) -> defaultdict:
