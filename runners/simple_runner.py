@@ -1,5 +1,5 @@
 from argparse import Namespace
-from typing import Callable, List, Tuple
+from typing import Callable
 
 import torch
 from torch_geometric.data import Dataset
@@ -13,7 +13,7 @@ import utils.loss as loss_module
 class SimpleRunner(Runner):
     @classmethod
     def train(cls, args: Namespace, dataset: Dataset, seed: int, save_model: bool = False,
-              visualize: bool = False) -> Tuple[float, torch.Tensor, List[torch.Tensor]] | Tuple[float, torch.Tensor]:
+              visualize: bool = False) -> tuple[float, torch.Tensor, list[torch.Tensor]] | tuple[float, torch.Tensor]:
         cls.set_seed(seed)
         dataset_size = len(dataset)
         dataloader = DataLoader(dataset, batch_size=dataset_size, shuffle=False)

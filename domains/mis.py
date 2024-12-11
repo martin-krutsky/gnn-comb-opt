@@ -71,7 +71,7 @@ class MIS(CODomain):
         return nx_bitstring, ind_set_nx_size, number_violations, t_solve
 
     @staticmethod
-    def postprocess_gnn(best_bitstring: torch.Tensor, nx_graph: nx.Graph) -> (list, int, int):
+    def postprocess_gnn(best_bitstring: torch.Tensor, nx_graph: nx.Graph) -> (int, set, int):
         """
         helper function to postprocess MIS results
 
