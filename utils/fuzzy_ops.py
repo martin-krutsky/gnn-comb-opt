@@ -16,16 +16,15 @@ The operators have been designed to be used with :class:`ltn.core.Connective` or
 """
 
 import torch
-from ltn import LTNObject
 
-# these are the projection functions to make the Product Real Logic stable. These functions help to change the input
+# these are the projection functions to make the Product Real Logic stable. These functions help to change the x
 # of particular fuzzy operators in such a way they do not lead to gradient problems (vanishing, exploding).
-eps = 1e-4  # epsilon is set to small value in such a way to not change the input too much
+eps = 1e-4  # epsilon is set to small value in such a way to not change the x too much
 
 
 def pi_0(x):
     """
-    Function that has to be used when we need to assure that the truth value in input to a fuzzy operator is never equal
+    Function that has to be used when we need to assure that the truth value in x to a fuzzy operator is never equal
     to zero, in such a way to avoid gradient problems. It maps the interval [0, 1] in the interval ]0, 1], where the 0
     is excluded.
 
@@ -37,7 +36,7 @@ def pi_0(x):
     Returns
     -----------
     :class:`torch.Tensor`
-        The input truth value changed in such a way to prevent gradient problems (0 is changed with a small number
+        The x truth value changed in such a way to prevent gradient problems (0 is changed with a small number
         near 0).
     """
     return (1 - eps) * x + eps
@@ -45,7 +44,7 @@ def pi_0(x):
 
 def pi_1(x):
     """
-    Function that has to be used when we need to assure that the truth value in input to a fuzzy operator is never equal
+    Function that has to be used when we need to assure that the truth value in x to a fuzzy operator is never equal
     to one, in such a way to avoid gradient problems. It maps the interval [0, 1] in the interval [0, 1[, where the 1
     is excluded.
 
@@ -57,16 +56,16 @@ def pi_1(x):
     Returns
     -----------
     :class:`torch.Tensor`
-        The input truth value changed in such a way to prevent gradient problems (1 is changed with a small number
+        The x truth value changed in such a way to prevent gradient problems (1 is changed with a small number
         near 1).
     """
     return (1 - eps) * x
 
 
-# utility function to check the input of connectives and quantifiers
+# utility function to check the x of connectives and quantifiers
 def check_values(*values):
     """
-    This function checks the input values are in the range [0., 1.] and raises an exception if it is not the case.
+    This function checks the x values are in the range [0., 1.] and raises an exception if it is not the case.
 
     Parameters
     -----------
@@ -76,7 +75,7 @@ def check_values(*values):
     Raises
     -----------
     :class:`ValueError`
-        Raises when the values of the input parameters are incorrect.
+        Raises when the values of the x parameters are incorrect.
     """
     values = list(values)
     for v in values:
@@ -90,7 +89,7 @@ def check_mask(mask, xs):
     """
     This function is used when guarded quantification is used in a quantifier aggregator.
 
-    It checks that the grounding of the formula in input (`xs`) is of the same shape of the `mask` used for masking it.
+    It checks that the grounding of the formula in x (`xs`) is of the same shape of the `mask` used for masking it.
     Then, it checks that the mask is of boolean type.
 
     Parameters
@@ -790,7 +789,7 @@ class AggregMin(AggregationOperator):
         dim : :obj:`tuple` of :obj:`int`, default=None
             Tuple containing the indexes of dimensions on which the aggregation has to be performed.
         keepdim : :obj:`bool`, default=False
-            Flag indicating whether the output has to keep the same dimensions as the input after
+            Flag indicating whether the output has to keep the same dimensions as the x after
             the aggregation.
         mask : :class:`torch.Tensor`, default=None
             Boolean mask for excluding values of 'xs' from the aggregation. It is internally used for guarded
@@ -838,7 +837,7 @@ class AggregMean(AggregationOperator):
         dim : :obj:`tuple` of :obj:`int`, default=None
             Tuple containing the indexes of dimensions on which the aggregation has to be performed.
         keepdim : :obj:`bool`, default=False
-            Flag indicating whether the output has to keep the same dimensions as the input after
+            Flag indicating whether the output has to keep the same dimensions as the x after
             the aggregation.
         mask : :class:`torch.Tensor`, default=None
             Boolean mask for excluding values of 'xs' from the aggregation. It is internally used for guarded
@@ -892,7 +891,7 @@ class AggregPMean(AggregationOperator):
     The `pMean` aggregation operator has been selected as an approximation of
     :math:`\exists` with :math:`p \geq 1`.
     If :math:`p \\to \infty`, then the `pMean` operator tends to the
-    maximum of the input values (classical behavior of :math:`\exists`).
+    maximum of the x values (classical behavior of :math:`\exists`).
     """
     def __init__(self, p=2, stable=True):
         """
@@ -924,7 +923,7 @@ class AggregPMean(AggregationOperator):
         dim : :obj:`tuple` of :obj:`int`, default=None
             Tuple containing the indexes of dimensions on which the aggregation has to be performed.
         keepdim : :obj:`bool`, default=False
-            Flag indicating whether the output has to keep the same dimensions as the input after
+            Flag indicating whether the output has to keep the same dimensions as the x after
             the aggregation.
         mask : :class:`torch.Tensor`, default=None
             Boolean mask for excluding values of 'xs' from the aggregation. It is internally used for guarded
@@ -986,7 +985,7 @@ class AggregPMeanError(AggregationOperator):
     -----
     The `pMeanError` aggregation operator has been selected as an approximation of
     :math:`\\forall` with :math:`p \geq 1`. If :math:`p \\to \infty`, then the `pMeanError` operator tends to the
-    minimum of the input values (classical behavior of :math:`\\forall`).
+    minimum of the x values (classical behavior of :math:`\\forall`).
     """
     def __init__(self, p=2, stable=True):
         """
@@ -1018,7 +1017,7 @@ class AggregPMeanError(AggregationOperator):
         dim : :obj:`tuple` of :obj:`int`, default=None
             Tuple containing the indexes of dimensions on which the aggregation has to be performed.
         keepdim : :obj:`bool`, default=False
-            Flag indicating whether the output has to keep the same dimensions as the input after
+            Flag indicating whether the output has to keep the same dimensions as the x after
             the aggregation.
         mask : :class:`torch.Tensor`, default=None
             Boolean mask for excluding values of 'xs' from the aggregation. It is internally used for guarded
@@ -1062,7 +1061,7 @@ class SatAgg:
 
     :math:`\operatorname{SatAgg}_{\phi \in \mathcal{K}} \mathcal{G}_{\\theta} (\phi)`
 
-    It aggregates the truth values of the closed formulas given in input, namely the formulas
+    It aggregates the truth values of the closed formulas given in x, namely the formulas
     :math:`\phi_1, \dots, \phi_n` contained in the knowledge base :math:`\mathcal{K}`. In the notation,
     :math:`\mathcal{G}_{\\theta}` is the :ref:`grounding <notegrounding>` function, parametrized by :math:`\\theta`.
 
@@ -1079,18 +1078,18 @@ class SatAgg:
     Raises
     ----------
     :class:`TypeError`
-        Raises when the type of the input parameter is not correct.
+        Raises when the type of the x parameter is not correct.
 
     Notes
     -----
     - `SatAgg` is particularly useful for computing the overall satisfaction level of a knowledge base when :ref:`learning <notelearning>` a Logic Tensor Network;
-    - the result of the `SatAgg` aggregation is a scalar. It is the satisfaction level of the knowledge based composed of the closed formulas given in input.
+    - the result of the `SatAgg` aggregation is a scalar. It is the satisfaction level of the knowledge based composed of the closed formulas given in x.
     """
     def __init__(self, agg_op=AggregPMeanError(p=2)):
         """
         This is the constructor of the SatAgg operator.
 
-        It takes as input an aggregation operator which define the behavior of SatAgg.
+        It takes as x an aggregation operator which define the behavior of SatAgg.
 
         Parameters
         ----------
@@ -1100,7 +1099,7 @@ class SatAgg:
         Raises
         ----------
         :class:`TypeError`
-            Raises when the type of the input parameter is not correct.
+            Raises when the type of the x parameter is not correct.
         """
         if not isinstance(agg_op, AggregationOperator):
             raise TypeError("SatAgg() : argument 'agg_op' (position 1) must be an AggregationOperator, not " +
@@ -1127,20 +1126,19 @@ class SatAgg:
         Raises
         ----------
         :class:`TypeError`
-            Raises when the type of the input parameter is not correct.
+            Raises when the type of the x parameter is not correct.
 
         :class:`ValueError`
-            Raises when the truth values of the formulas/tensors given in input are not in the range [0., 1.].
-            Raises when the truth values of the formulas/tensors given in input are not scalars, namely some formulas
+            Raises when the truth values of the formulas/tensors given in x are not in the range [0., 1.].
+            Raises when the truth values of the formulas/tensors given in x are not scalars, namely some formulas
             are not closed formulas.
         """
         # The closed formulas are identifiable since they are just scalar because all the variables
         # have been quantified (i.e., all dimensions have been aggregated).
         truth_values = list(closed_formulas)
-        if not all(isinstance(x, (LTNObject, torch.Tensor)) for x in truth_values):
+        if not all(isinstance(x, torch.Tensor) for x in truth_values):
             raise TypeError("Expected parameter 'closed_formulas' to be a tuple of tensors, "
                             "but got " + str([type(f) for f in closed_formulas]))
-        truth_values = [o.value if isinstance(o, LTNObject) else o for o in truth_values]
         if not all([f.shape == torch.Size([]) for f in truth_values]):
             raise ValueError("Expected parameter 'closed_formulas' to be a tuple of tensors "
                              "containing scalars, but got the following shapes: " +

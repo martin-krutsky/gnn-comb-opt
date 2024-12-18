@@ -20,6 +20,15 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('--stop_strategy', type=str, choices=['loss'], default='loss')
     parser.add_argument('--assignment_threshold', type=float, default=0.5)
 
+    # # QUBO params
+    # parser.add_argument('--qubo_contstant', type=int, default=2)
+
+    # Fuzzy losses/Regularization/Discrete activations
+    parser.add_argument('--loss', type=str, choices=['ProductQUBOLoss', 'LukasiewiczQUBOLoss', 'MinQUBOLoss'], default='ProductQUBOLoss')
+    parser.add_argument('--regularization', type=str, choices=['', 'l1_reg', 'entropy_reg'], default='')
+    parser.add_argument('--activation', type=str, choices=['Sigmoid', 'SignSTE', 'SignSigmoid'], default='Sigmoid')
+
+
     DEFAULT_PROBLEM_SIZE = 100
     # Domain params
     parser.add_argument('--domain', choices=['MIS', "MaxCut"], default='MIS')
@@ -31,7 +40,6 @@ def get_parser() -> argparse.ArgumentParser:
     DEFAULT_EMBEDDING_SIZE = int(np.sqrt(DEFAULT_PROBLEM_SIZE))
     DEFAULT_HIDDEN_SIZE = int(DEFAULT_EMBEDDING_SIZE / 2)
     # Model hyperparams
-    parser.add_argument('--loss', type=str, choices=['loss_qubo', 'loss_linear_interp'], default='loss_qubo')
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--weight_decay', type=float, default=0)
     parser.add_argument('--n_layers', type=int, default=2)
@@ -55,13 +63,12 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('--device', type=str, choices=['cpu', 'cuda'], default='cpu')
     parser.add_argument('--cuda', type=int, default=0)
     parser.add_argument('--data_type', type=str, choices=['float32', 'float64'], default='float32')
+    parser.add_argument('--visualize', action='store_true')
 
-    # flags
+    # Ray Tune flags
     parser.add_argument('--use_ray_tune', action='store_true')
     parser.add_argument('--ray_address', type=str, default='auto')
     parser.add_argument('--tracking_uri', type=str, choices=['http://147.32.83.171:2222', 'sqlite:///mlruns.db', ''], default='http://147.32.83.171:2222')
-    parser.add_argument('--visualize', action='store_true')
-
-    parser.add_argument('--num_raytune_samples', type=int, default=10)
+    parser.add_argument('--num_raytune_samples', type=int, default=1000)
 
     return parser

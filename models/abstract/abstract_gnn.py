@@ -15,7 +15,7 @@ class AbstractGNN(ABC, nn.Module):
         Dropout is added in forward step.
 
         Inputs:
-            in_feats: Dimension of the input (embedding) layer
+            in_feats: Dimension of the x (embedding) layer
             hidden_channels: Hidden layer size
             dropout: Fraction of dropout to add between intermediate layer. Value is cached for later use.
             device: Specifies device (CPU vs GPU) to load variables onto

@@ -31,6 +31,9 @@ def evaluate_final_results(losses, improvements, nr_of_seeds):
 if __name__ == '__main__':
     parser = get_parser()
     parsed_args = parser.parse_args()
+    if parsed_args.discretization != '' and parsed_args.activation != 'Sigmoid':
+        parser.error(f'Choosing soft discretization ({parsed_args.discretization}) is incompatible with '
+                     f'binarized activation ({parsed_args.activation})')
 
     parsed_args.data_type = getattr(torch, parsed_args.data_type)
     exp_dataset: Dataset = get_dataset(parsed_args.domain, data_size=parsed_args.data_size,

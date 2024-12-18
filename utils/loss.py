@@ -1,48 +1,60 @@
+from abc import abstractmethod
+from typing import Callable
+
 import torch
 
+from utils.fuzzy_ops import AndMin, AndProd, AndLuk
 
-def loss_qubo(probs: torch.Tensor, q_mat: torch.Tensor, is_batch: bool = False) -> torch.Tensor:
+
+def loss_qubo(probs: torch.Tensor, q_mat: torch.Tensor, conjunction: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+              is_batch: bool = False) -> torch.Tensor:
     """
-    Function to compute cost value for given probability of spin [prob(+1)] and predefined q matrix.
+    Function to compute cost value for given fuzzy degree of spin, using given conjunction and predefined q matrix.
 
     Input:
-        probs: Probability of each node belonging to each class, as a vector
+        probs: (Fuzzy) degree of each node belonging to each class, as a vector
         q_mat: QUBO as torch tensor
     """
+    problem_size = q_mat.shape[1]
     if is_batch:
-        problem_size = q_mat.shape[1]
         probs_ = probs.reshape(-1, problem_size)
+        probs_x = probs_.unsqueeze(1).repeat(1, problem_size, 1)
+        probs_y = probs_.unsqueeze(2).repeat(1, 1, problem_size)
         q_mat_ = q_mat.reshape(-1, problem_size, problem_size)
-        temp_mat = torch.einsum('ijk,ik->ij', q_mat_, probs_)
-        cost = torch.einsum('ij,ij->i', probs_, temp_mat)
+        cost = (q_mat_ * conjunction(probs_x, probs_y)).sum(dim=[1,2])
         cost = cost.mean()
     else:
-        probs_ = torch.unsqueeze(probs, 1)
-        # minimize cost = x.T * q * x
-        cost = (probs_.T @ q_mat @ probs_).squeeze()
+        probs_x = probs.unsqueeze(0).repeat(problem_size, 1)
+        probs_y = probs.unsqueeze(1).repeat(1, problem_size)
+        # minimize cost = q * max(0, x + y - 1)
+        cost = (q_mat * conjunction(probs_x, probs_y)).sum()
     return cost
 
 
-def loss_linear_interp(probs: torch.Tensor, q_mat: torch.Tensor, is_batch: bool = False) -> torch.Tensor:
-    if is_batch:
-        problem_size = q_mat.shape[1]
-        probs_ = probs.reshape(-1, problem_size)
-        q_mat_ = q_mat.reshape(-1, problem_size, problem_size)
+class QUBOLoss:
+    @property
+    @abstractmethod
+    def conjunction(self):
+        raise NotImplementedError
 
-        max_q = torch.maximum(torch.zeros(q_mat_.size()), q_mat_)
-        min_q = torch.minimum(torch.zeros(q_mat_.size()), q_mat_)
+    def __init__(self, regularization: Callable[[torch.Tensor], torch.Tensor] | None = None):
+        self.regularization = regularization
 
-        x_rows = probs_.unsqueeze(1).repeat(1, probs_.shape[1], 1)
-        x_cols = probs_.unsqueeze(2).repeat(1, 1, probs_.shape[1])
-        max_xs = torch.maximum(torch.zeros(q_mat_.size()), x_rows + x_cols - 1)
-    else:
-        max_q = torch.maximum(torch.zeros(q_mat.size()), q_mat)
-        min_q = torch.minimum(torch.zeros(q_mat.size()), q_mat)
+    def __call__(self, probs: torch.Tensor, q_mat: torch.Tensor, is_batch: bool = False):
+        qubo = loss_qubo(probs, q_mat, conjunction=self.conjunction, is_batch=is_batch)
+        if self.regularization is not None:
+            qubo += self.regularization(probs)
+        return qubo
 
-        x_rows = probs.unsqueeze(0).repeat(probs.shape[0], 1)
-        x_cols = probs.unsqueeze(1).repeat(1, probs.shape[0])
-        max_xs = torch.maximum(torch.zeros(q_mat.size()), x_rows + x_cols - 1)
 
-    mat_res = (max_q + min_q) * max_xs
-    return mat_res.sum()
+class MinQUBOLoss(QUBOLoss):
+    conjunction = AndMin()
+
+
+class ProductQUBOLoss(QUBOLoss):
+    conjunction = AndProd()
+
+
+class LukasiewiczQUBOLoss(QUBOLoss):
+    conjunction = AndLuk()
 

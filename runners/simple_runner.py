@@ -28,16 +28,18 @@ class SimpleRunner(Runner):
             "dropout": args.dropout,
             "gcn_layer_kwargs": args.gcn_layer_kwargs,
         }
-        model_cls, gcn_cls = SimpleRunner.get_torch_classes(args.model_cls, args.gcn_cls)
+        model_cls, gcn_cls, act_cls, reg_cls, loss_cls = cls.get_torch_classes(
+            args.model_cls, args.gcn_cls, args.activation, args.regularization, args.loss
+        )
 
-        model: AbstractGNN = model_cls(gcn_cls, **model_hyperparams, device=args.device).type(args.data_type).to(
-            args.device)
+        model: AbstractGNN = model_cls(gcn_cls, act_cls, **model_hyperparams, device=args.device).type(
+            args.data_type).to(args.device)
         optimizer_params = {
             "lr": args.lr,
             "weight_decay": args.weight_decay,
         }
         optimizer: torch.optim.Optimizer = torch.optim.Adam(model.parameters(), **optimizer_params)
-        loss: Callable[[torch.Tensor, torch.Tensor, bool], torch.Tensor] = getattr(loss_module, args.loss)
+        loss: loss_module.QUBOLoss = loss_cls(reg_cls)
 
         best_train_loss = float('inf')
         best_bit_prediction = torch.zeros((dataset[0].num_nodes,)).type(args.data_type).to(args.device)

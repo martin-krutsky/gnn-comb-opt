@@ -23,6 +23,10 @@ class RayRunner(Runner):
     @classmethod
     def train(cls, config: dict, tracking_uri: str, experiment_name: str, run_name: str, args: Namespace, dataset: Dataset,
               seed: int, retraining_model: bool = False) -> (float, torch.Tensor):
+        if config['discretization'] != '' and config['activation'] != 'Sigmoid':
+            raise Exception(f'Choosing soft discretization ({config["discretization"]}) is incompatible with '
+                            f'binarized activation ({config["activation"]})')
+
         cls.set_seed(seed)
         dataset_size = len(dataset)
         dataloader = DataLoader(dataset, batch_size=dataset_size, shuffle=False)
@@ -45,15 +49,18 @@ class RayRunner(Runner):
             "dropout": config["dropout"],
             "gcn_layer_kwargs": config["gcn_layer"]["hyperparams"],
         }
-        model_cls, gcn_cls = cls.get_torch_classes(args.model_cls, config["gcn_layer"]["layer_name"])
-        model: AbstractGNN = model_cls(gcn_cls, **model_hyperparams, device=args.device).type(args.data_type).to(
-            args.device)
+        model_cls, gcn_cls, act_cls, reg_cls, loss_cls = cls.get_torch_classes(
+            args.model_cls, config["gcn_layer"]["layer_name"], config["activation"], config['regularization'], config["loss"]
+        )
+
+        model: AbstractGNN = model_cls(gcn_cls, act_cls, **model_hyperparams, device=args.device).type(
+            args.data_type).to(args.device)
         optimizer_params = {
             "lr": config["lr"],
             "weight_decay": config["weight_decay"],
         }
         optimizer: torch.optim.Optimizer = torch.optim.Adam(model.parameters(), **optimizer_params)
-        loss: Callable[[torch.Tensor, torch.Tensor, bool], torch.Tensor] = getattr(loss_module, args.loss)
+        loss: loss_module.QUBOLoss = loss_cls(reg_cls)
 
         if not retraining_model:
             # Load existing checkpoint through `get_checkpoint()` API.
