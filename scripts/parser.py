@@ -15,7 +15,7 @@ def get_parser() -> argparse.ArgumentParser:
 
     # Optimization params
     parser.add_argument('--epochs', type=int, default=int(1e5))
-    parser.add_argument('--early_stopping_patience', type=int, default=500)
+    parser.add_argument('--early_stopping_patience', type=int, default=1e3)
     parser.add_argument('--early_stopping_small_diff', type=float, default=1e-4)
     parser.add_argument('--stop_strategy', type=str, choices=['loss'], default='loss')
     parser.add_argument('--assignment_threshold', type=float, default=0.5)
@@ -25,8 +25,8 @@ def get_parser() -> argparse.ArgumentParser:
 
     # Fuzzy losses/Regularization/Discrete activations
     parser.add_argument('--loss', type=str, choices=['ProductQUBOLoss', 'LukasiewiczQUBOLoss', 'MinQUBOLoss'], default='ProductQUBOLoss')
-    parser.add_argument('--regularization', type=str, choices=['', 'l1_reg', 'entropy_reg'], default='')
-    parser.add_argument('--activation', type=str, choices=['Sigmoid', 'SignSTE', 'SignSigmoid'], default='Sigmoid')
+    parser.add_argument('--regularization', type=str, choices=['', 'l1', 'entropy'], default='')
+    parser.add_argument('--activation', type=str, choices=['Sigmoid', 'SignSTE', 'SignSigmoid'], default='Sigmoid')  # Sigmoid with temp. annealing
 
 
     DEFAULT_PROBLEM_SIZE = 100

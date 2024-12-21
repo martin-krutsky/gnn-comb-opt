@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import torch
 from torch.nn import Module
-from torch.nn.modules.loss import _Loss
 from torch.optim import Optimizer
 import torch_geometric.nn as pyg_nn
 from torch_geometric.data import Data, Dataset
@@ -28,7 +27,8 @@ class Runner(ABC):
     @staticmethod
     def get_torch_classes(model_cls_name: str, conv_layer_cls_name: str, activation_cls_name: str,
                           regularization_cls_name: str, loss_cls_name: str) -> (
-            type[AbstractGNN], type[MessagePassing], type[torch.autograd.Function | Module], type[_Loss], type[loss_module.QUBOLoss]):
+            type[AbstractGNN], type[MessagePassing], type[torch.autograd.Function | Module],
+            Callable[[torch.Tensor], torch.Tensor] | None, type[loss_module.QUBOLoss]):
         try:
             model_class: type[AbstractGNN] = getattr(models, model_cls_name)
         except AttributeError:
@@ -42,14 +42,14 @@ class Runner(ABC):
         except AttributeError:
             raise AttributeError('Unknown activation class')
         try:
-            reg_class: type[_Loss] = getattr(discretize_module, regularization_cls_name) if regularization_cls_name != '' else None
+            reg_func: type[Callable[[torch.Tensor], torch.Tensor]] | None = getattr(discretize_module, regularization_cls_name) if regularization_cls_name != '' else None
         except AttributeError:
             raise AttributeError('Unknown regularization class')
         try:
             loss_class: type[loss_module.QUBOLoss] = getattr(loss_module, loss_cls_name)
         except AttributeError:
             raise AttributeError('Unknown loss class')
-        return model_class, gcn_class, act_class, reg_class, loss_class
+        return model_class, gcn_class, act_class, reg_func, loss_class
 
     @staticmethod
     def train_step(model: Module, loss_fn: Callable, optimizer: Optimizer, data_batch: Data,

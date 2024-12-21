@@ -1,10 +1,24 @@
+import numpy as np
 import torch
 from torch.autograd import Function
-from torch.nn import Sigmoid
+from torch.nn import Sigmoid, Module
 
 
-def temp_sigmoid(x, temp):
-    return torch.sigmoid(x/(temp))
+class SigmoidTempAnnealing(Module):
+    min_mult: int = 1
+    max_mult: int = 100
+
+    def __init__(self, schedule='linear', training_steps=None):
+        super(SigmoidTempAnnealing, self).__init__()
+        if schedule == 'linear':
+            self.schedule = np.linspace(self.min_mult, self.max_mult, training_steps)
+        elif schedule == 'logarithmic':
+            self.schedule = np.logspace(self.min_mult, self.max_mult, training_steps)
+        elif schedule == 'cosine':
+            pass  # TODO
+
+    def forward(self, x: torch.Tensor, time_idx: int):
+        return torch.sigmoid(x * self.schedule[time_idx])
 
 
 class SignSTE(Function):
@@ -14,7 +28,7 @@ class SignSTE(Function):
         Forward pass: Binarized sigmoid as a step function.
         """
         ctx.save_for_backward(x)
-        x = x.sign()
+        x = (x >= 0).float()
         return x
 
     @staticmethod
@@ -23,7 +37,7 @@ class SignSTE(Function):
         Backward pass: Use the gradient of the straight-through estimation.
         """
         act_input, = ctx.saved_tensors
-        mask = act_input.ge(-1) & act_input.le(1)
+        mask = act_input.ge(-0.5) & act_input.le(0.5)
         grad_input = torch.where(
             mask, grad_output, torch.zeros_like(grad_output))
         return grad_input
@@ -36,7 +50,7 @@ class SignSigmoid(Function):
         Forward pass: Binarized sigmoid as a step function.
         """
         ctx.save_for_backward(x)
-        x = x.sign()
+        x = (x >= 0).float()
         return x
 
     @staticmethod
@@ -50,3 +64,11 @@ class SignSigmoid(Function):
         sigmoid_grad = torch.sigmoid(act_input) * (1 - torch.sigmoid(act_input))
         return grad_output * sigmoid_grad
 
+
+def l1(x: torch.Tensor) -> torch.Tensor:
+    alpha = 0.01
+    return alpha * torch.norm(x, 1)
+
+
+def entropy(x: torch.Tensor) -> torch.Tensor:
+    return torch.nn.functional.l1_loss(x, x)

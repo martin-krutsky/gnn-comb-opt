@@ -49,6 +49,6 @@ hyperparams_config = {
     'dropout': tune.choice([0.0, 0.1, 0.2, 0.4, 0.3, 0.5]),
     'gcn_layer': tune.choice([{'layer_name': key, 'hyperparams': values} for key, values in gcn_hyperparams_mapper.items()]),
     'activation': tune.choice(['Sigmoid', 'SignSTE', 'SignSigmoid']),
-    'regularization': tune.choice(['', 'l1_reg', 'entropy_reg']),
+    'regularization': tune.choice(['', 'l1', 'entropy']),
     'loss': tune.choice(['ProductQUBOLoss', 'LukasiewiczQUBOLoss', 'MinQUBOLoss']),
 }
