@@ -11,7 +11,7 @@ def get_parser() -> argparse.ArgumentParser:
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--seed', type=int)
-    group.add_argument('--rnd_seeds', type=int, default=10)
+    group.add_argument('--rnd_seeds', type=int)
 
     # Optimization params
     parser.add_argument('--epochs', type=int, default=int(1e5))

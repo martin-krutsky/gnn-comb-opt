@@ -103,7 +103,7 @@ def get_dataset(domain_name: str, data_size: int = 1, problem_size: int = 10, no
     except AttributeError:
         raise AttributeError('Unknown CO domain class')
 
-    dataset_path = os.path.join(DATASET_DIR, f'{domain_name}_size{data_size}_dreg{node_degree}.pkl')
+    dataset_path = os.path.join(DATASET_DIR, f'{domain_name}_data{data_size}_problem{problem_size}_deg{node_degree}.pkl')
     if not os.path.isfile(dataset_path):
         os.makedirs(DATASET_DIR, exist_ok=True)
 
