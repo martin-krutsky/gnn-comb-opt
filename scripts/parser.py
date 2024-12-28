@@ -14,7 +14,7 @@ def get_parser() -> argparse.ArgumentParser:
     group.add_argument('--rnd_seeds', type=int, default=10)
 
     # Optimization params
-    parser.add_argument('--epochs', type=int, default=int(1e3))
+    parser.add_argument('--epochs', type=int, default=int(1e5))
     parser.add_argument('--early_stopping_patience', type=int, default=1e4)
     parser.add_argument('--early_stopping_tolerance', type=float, default=1e-4)
     # parser.add_argument('--stop_strategy', type=str, choices=['loss'], default='loss')
