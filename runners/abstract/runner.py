@@ -66,10 +66,10 @@ class Runner(ABC):
         return loss.detach().item()
 
     @staticmethod
-    def predict(model: Module, data: Data, prob_threshold: float) -> torch.Tensor:
+    def predict(model: Module, data: Data, prob_threshold: float, time_step: int | None = None) -> torch.Tensor:
         model.eval()
         with torch.no_grad():
-            out = model(data)
+            out = model(data, time_step=time_step)
             pred = (out >= prob_threshold).int()
             return pred.detach().cpu().T
 

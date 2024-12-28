@@ -72,8 +72,9 @@ if __name__ == '__main__':
     else:
         rnd_seeds = [parsed_args.seed]
 
+    result_path = parsed_args.result_path.format(experiment_name=parsed_args.experiment_name)
     data_folder = f'{parsed_args.domain}/{parsed_args.node_degree}/{parsed_args.problem_size}'
-    os.makedirs(os.path.join(parsed_args.result_path, data_folder), exist_ok=True)
+    os.makedirs(os.path.join(result_path, data_folder), exist_ok=True)
     for rnd_seed in rnd_seeds:
         if parsed_args.use_ray_tune:
             losses, pred_sizes, solver_sizes, violations, improvements = RayRunner.run(  # TODO adjust raytune
@@ -89,7 +90,7 @@ if __name__ == '__main__':
 
         single_result_df = pd.DataFrame({'qubo_loss': losses, 'pred_size': pred_sizes, 'solver_size': solver_sizes,
                                          'violation': violations, 'improvement': improvements})
-        result_file = os.path.join(parsed_args.result_path, data_folder, f'{rnd_seed}.csv')
+        result_file = os.path.join(result_path, data_folder, f'{rnd_seed}.csv')
         single_result_df.to_csv(result_file, index=False)
 
         for key, value in zip(result_dict.keys(), [
@@ -104,6 +105,6 @@ if __name__ == '__main__':
     # if len(avg_losses_ls) > 1:
     result_df = pd.DataFrame(result_dict)
     print(result_df)
-    result_file = os.path.join(parsed_args.result_path, data_folder, f'complete_results.csv')
+    result_file = os.path.join(result_path, data_folder, f'complete_results.csv')
     result_df.to_csv(result_file, index=False)
     # evaluate_final_results(losses_ls, improvements_ls, len(rnd_seeds))

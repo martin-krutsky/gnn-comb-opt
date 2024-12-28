@@ -24,7 +24,7 @@ class SimpleRunner(Runner):
         )
 
         model: AbstractGNN = model_cls(gcn_cls, act_cls, **model_hyperparams, device=args.device,
-                                       temp_schedule=args.temp_schedule | None).type(
+                                       temp_schedule=args.temp_schedule or None, nr_tr_epochs=args.epochs or None).type(
             args.data_type).to(args.device)
         optimizer_params = {
             "lr": args.lr,
@@ -43,8 +43,9 @@ class SimpleRunner(Runner):
         for epoch in range(1, args.epochs + 1):
             data.to(args.device)
             train_loss = cls.train_step(model, loss, optimizer, data, has_multiple=has_multiple,
-                                        time_step=epoch if args.activation == 'SigmoidTempAnnealing' else None)
-            prediction = cls.predict(model, data, args.assignment_threshold)
+                                        time_step=epoch-1 if args.activation == 'SigmoidTempAnnealing' else None)
+            prediction = cls.predict(model, data, args.assignment_threshold,
+                                     time_step=epoch-1 if args.activation == 'SigmoidTempAnnealing' else None)
 
             if (epoch % min(1000, int(args.epochs // 10))) == 0:
                 print(f'Epoch: {epoch}, Loss: {train_loss}')

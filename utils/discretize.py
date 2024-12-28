@@ -65,10 +65,9 @@ class SignSigmoid(Function):
         return grad_output * sigmoid_grad
 
 
-def l1(x: torch.Tensor) -> torch.Tensor:
-    alpha = 0.01
+def l1(x: torch.Tensor, alpha: float = 0.1) -> torch.Tensor:
     return alpha * torch.norm(x, 1)
 
 
-def entropy(x: torch.Tensor) -> torch.Tensor:
-    return torch.nn.functional.l1_loss(x, x)
+def entropy(x: torch.Tensor, alpha: float = 0.1) -> torch.Tensor:
+    return alpha * torch.nn.functional.l1_loss(x, x)

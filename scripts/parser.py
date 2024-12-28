@@ -26,6 +26,7 @@ def get_parser() -> argparse.ArgumentParser:
     # Fuzzy losses/Regularization/Discrete activations
     parser.add_argument('--loss', type=str, choices=['ProductQUBOLoss', 'LukasiewiczQUBOLoss', 'MinQUBOLoss'], default='ProductQUBOLoss')
     parser.add_argument('--regularization', type=str, choices=['', 'l1', 'entropy'], default='')
+    parser.add_argument('--regularization_weight', type=float, default=0.01)
     parser.add_argument('--activation', type=str, choices=['Sigmoid', 'SignSTE', 'SignSigmoid', 'SigmoidTempAnnealing'], default='Sigmoid')  # Sigmoid with temp. annealing
     parser.add_argument('--temp_schedule', type=str, choices=['', 'linear', 'logarithmic'], default='')
 
@@ -66,7 +67,8 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('--cuda', type=int, default=0)
     parser.add_argument('--data_type', type=str, choices=['float32', 'float64'], default='float32')
     parser.add_argument('--visualize', action='store_true')
-    parser.add_argument('--result_path', type=str, default='perf_results/')
+    parser.add_argument('--result_path', type=str, default='perf_results/{experiment_name}/')
+    parser.add_argument('--experiment_name', type=str, default='baseline')
 
     # Ray Tune flags
     parser.add_argument('--use_ray_tune', action='store_true')
