@@ -13,7 +13,7 @@ from models.abstract.abstract_gnn import AbstractGNN
 class GNN(AbstractGNN):
     def __init__(self, gnn_layer_cls: type[MessagePassing], activation_cls: type[torch.autograd.Function],
                  n_layers: int, n_nodes: int, in_feats: int, hidden_channels: int, number_classes: int,
-                 dropout: float, device: torch.device, gcn_layer_kwargs: dict[str, Any] = None):
+                 dropout: float, device: torch.device, gcn_layer_kwargs: dict[str, Any] = None, temp_schedule: str | None = None):
         """
         Initialize a new instance of the GNN model of provided size.
         Dropout is added in forward step.
@@ -24,7 +24,7 @@ class GNN(AbstractGNN):
             dropout: Fraction of dropout to add between intermediate layer. Value is cached for later use.
             device: Specifies device (CPU vs GPU) to load variables onto
         """
-        super(GNN, self).__init__(gnn_layer_cls, n_layers, n_nodes, in_feats, hidden_channels, number_classes, dropout, device)
+        super(GNN, self).__init__(gnn_layer_cls, activation_cls, n_layers, n_nodes, in_feats, hidden_channels, number_classes, dropout, device, gcn_layer_kwargs)
         self.embed = nn.Embedding(n_nodes, in_feats)
         self.conv_layers = nn.ModuleList()
         for i in range(n_layers):
@@ -39,9 +39,9 @@ class GNN(AbstractGNN):
                 out_channels = hidden_channels
             layer = gnn_layer_cls(in_channels=in_channels, out_channels=out_channels, **gcn_layer_kwargs).to(device)
             self.conv_layers.append(layer)
-        self.final_activation = activation_cls()
+        self.final_activation = activation_cls(temp_schedule) if temp_schedule is not None else activation_cls()
 
-    def forward(self, graph_data: Data) -> torch.Tensor:
+    def forward(self, graph_data: Data, time_step: int | None = None) -> torch.Tensor:
         """
         Run forward propagation step of instantiated model.
 
@@ -57,5 +57,8 @@ class GNN(AbstractGNN):
             if i != self.n_layers - 1:
                 h = torch.relu(h)
                 h = F.dropout(h, p=self.dropout_frac)
-        h = self.final_activation(h)
+        if time_step is not None:
+            h = self.final_activation(h, time_step)
+        else:
+            h = self.final_activation(h)
         return h

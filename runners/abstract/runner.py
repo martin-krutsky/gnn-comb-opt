@@ -53,12 +53,12 @@ class Runner(ABC):
 
     @staticmethod
     def train_step(model: Module, loss_fn: Callable, optimizer: Optimizer, data_batch: Data,
-                   is_batch: bool = False) -> float:
+                   has_multiple: bool = False, time_step: int | None = None) -> float:
         model.train()
         optimizer.zero_grad()
 
-        out = model(data_batch)[:, 0]
-        loss = loss_fn(out, data_batch.q_matrix, is_batch=is_batch)  # the edge index stores the Q matrix
+        out = model(data_batch, time_step=time_step)[:, 0]
+        loss = loss_fn(out, data_batch.q_matrix, has_multiple=has_multiple)  # the edge index stores the Q matrix
 
         loss.backward()
         optimizer.step()
@@ -82,15 +82,16 @@ class Runner(ABC):
     @classmethod
     def hash_save_model(cls, model: AbstractGNN, model_hyperparams: dict, optimizer_params: dict, args: Namespace,
                         seed: int):
-        model_hyperparams['model_cls'] = args.model_cls
-        model_hyperparams['gcn_cls'] = args.gcn_cls
-        hyperparam_hash = cls.hash_dict(model_hyperparams)
+        hyperparams = model_hyperparams.copy()
+        hyperparams['model_cls'] = args.model_cls
+        hyperparams['gcn_cls'] = args.gcn_cls
+        hyperparam_hash = cls.hash_dict(hyperparams)
         optparam_hash = cls.hash_dict(optimizer_params)
         save_path = args.save_path.format(domain=args.domain,
                                           domain_params=f'n{args.problem_size}_d{args.node_degree}_{args.graph_type}',
                                           hyperparam_hash=hyperparam_hash, optparam_hash=optparam_hash,
                                           rnd_seed=seed)
-        save_model_with_metadata(model, model_hyperparams, save_path)
+        save_model_with_metadata(model, hyperparams, save_path)
 
     @staticmethod
     def set_seed(seed: int):
@@ -101,10 +102,10 @@ class Runner(ABC):
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
 
-    @staticmethod
-    def postprocess(dataset: Dataset, prediction, visualize: bool = False):
-        improvement = []
-        prediction = prediction.reshape(len(dataset), -1)
+    @classmethod
+    def postprocess(cls, dataset: Dataset, prediction, visualize: bool = False):
+        improvements, pred_sizes, solver_sizes, violations = [], [], [], []
+        prediction = np.array(prediction).reshape(len(dataset), -1)
         for datapoint, pred in zip(dataset, prediction):
             # compute correctness of the neural prediction
             size_mis, ind_set, number_violations = dataset.domain.postprocess_gnn(pred, datapoint.nx_graph)
@@ -120,8 +121,11 @@ class Runner(ABC):
                 f'{dataset.domain.criterion_name} found by solver is {ind_set_nx_size} with {number_violations} violations')
 
             imp = size_mis - ind_set_nx_size if dataset.domain.maximization else ind_set_nx_size - size_mis
-            improvement.append(imp)
-        return improvement
+            improvements.append(imp)
+            pred_sizes.append(size_mis)
+            solver_sizes.append(ind_set_nx_size)
+            violations.append(number_violations)
+        return improvements, pred_sizes, solver_sizes, violations
 
     @staticmethod
     def postprocess_animate(dataset: Dataset, predictions):

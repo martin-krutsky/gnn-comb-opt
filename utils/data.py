@@ -14,6 +14,18 @@ from utils.transform import qubo_dict_to_torch
 DATASET_DIR = 'datasets/'
 
 
+class CombinatorialDataset(Dataset):
+    def __init__(self, data_list):
+        super().__init__()
+        self.data_list = data_list
+
+    def len(self):
+        return len(self.data_list)
+
+    def get(self, idx):
+        return self.data_list[idx]
+
+
 def generate_graph(n: int, d: int = None, p: float = None, graph_type: str = 'reg', random_seed: int = 0) -> nx.Graph:
     """
     Helper function to generate a NetworkX random graph of specified type,
@@ -91,7 +103,7 @@ def get_dataset(domain_name: str, data_size: int = 1, problem_size: int = 10, no
     except AttributeError:
         raise AttributeError('Unknown CO domain class')
 
-    dataset_path = os.path.join(DATASET_DIR, f'{domain_name}_size{data_size}.pkl')
+    dataset_path = os.path.join(DATASET_DIR, f'{domain_name}_size{data_size}_dreg{node_degree}.pkl')
     if not os.path.isfile(dataset_path):
         os.makedirs(DATASET_DIR, exist_ok=True)
 
@@ -99,11 +111,19 @@ def get_dataset(domain_name: str, data_size: int = 1, problem_size: int = 10, no
         for i in range(1, data_size + 1):
             data: Data = create_data(domain_cls, i, problem_size, node_degree, graph_type, dtype, device)
             data_list.append(data)
-        InMemoryDataset.save(data_list, dataset_path)
-    dataset: Dataset = InMemoryDataset()
-    dataset.load(dataset_path)
+        if save_to_file:
+            torch.save(data_list, dataset_path)
+        # InMemoryDataset.save(data_list, dataset_path)
+    else:
+        data_list: list[Data] = torch.load(dataset_path, weights_only=False)
+
+    dataset: Dataset = CombinatorialDataset(data_list)
     dataset.domain = domain_cls
 
-    if not save_to_file:
-        os.remove(dataset_path)
+    # dataset: Dataset = InMemoryDataset()
+    # dataset.load(dataset_path)
+    # dataset.domain = domain_cls
+    #
+    # if not save_to_file:
+    #     os.remove(dataset_path)
     return dataset

@@ -14,10 +14,10 @@ def get_parser() -> argparse.ArgumentParser:
     group.add_argument('--rnd_seeds', type=int, default=10)
 
     # Optimization params
-    parser.add_argument('--epochs', type=int, default=int(1e5))
-    parser.add_argument('--early_stopping_patience', type=int, default=1e3)
-    parser.add_argument('--early_stopping_small_diff', type=float, default=1e-4)
-    parser.add_argument('--stop_strategy', type=str, choices=['loss'], default='loss')
+    parser.add_argument('--epochs', type=int, default=int(1e3))
+    parser.add_argument('--early_stopping_patience', type=int, default=1e4)
+    parser.add_argument('--early_stopping_tolerance', type=float, default=1e-4)
+    # parser.add_argument('--stop_strategy', type=str, choices=['loss'], default='loss')
     parser.add_argument('--assignment_threshold', type=float, default=0.5)
 
     # # QUBO params
@@ -26,7 +26,8 @@ def get_parser() -> argparse.ArgumentParser:
     # Fuzzy losses/Regularization/Discrete activations
     parser.add_argument('--loss', type=str, choices=['ProductQUBOLoss', 'LukasiewiczQUBOLoss', 'MinQUBOLoss'], default='ProductQUBOLoss')
     parser.add_argument('--regularization', type=str, choices=['', 'l1', 'entropy'], default='')
-    parser.add_argument('--activation', type=str, choices=['Sigmoid', 'SignSTE', 'SignSigmoid'], default='Sigmoid')  # Sigmoid with temp. annealing
+    parser.add_argument('--activation', type=str, choices=['Sigmoid', 'SignSTE', 'SignSigmoid', 'SigmoidTempAnnealing'], default='Sigmoid')  # Sigmoid with temp. annealing
+    parser.add_argument('--temp_schedule', type=str, choices=['', 'linear', 'logarithmic'], default='')
 
 
     DEFAULT_PROBLEM_SIZE = 100
@@ -58,12 +59,14 @@ def get_parser() -> argparse.ArgumentParser:
 
     # Experiment params
     parser.add_argument('--data_size', type=int, default=1)
+    parser.add_argument('--use_as_batch', type=bool, default=False)
     parser.add_argument('--save_path', type=str,
                         default='bin/{domain}/{domain_params}/{hyperparam_hash}_{optparam_hash}/model{rnd_seed}.onnx')
     parser.add_argument('--device', type=str, choices=['cpu', 'cuda'], default='cpu')
     parser.add_argument('--cuda', type=int, default=0)
     parser.add_argument('--data_type', type=str, choices=['float32', 'float64'], default='float32')
     parser.add_argument('--visualize', action='store_true')
+    parser.add_argument('--result_path', type=str, default='perf_results/')
 
     # Ray Tune flags
     parser.add_argument('--use_ray_tune', action='store_true')

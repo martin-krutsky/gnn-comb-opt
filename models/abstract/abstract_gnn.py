@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -8,8 +9,9 @@ from torch_geometric.nn.conv import MessagePassing
 
 
 class AbstractGNN(ABC, nn.Module):
-    def __init__(self, gnn_layer_cls: type[MessagePassing], n_layers: int, n_nodes: int, in_feats: int, hidden_channels: int,
-                 number_classes: int, dropout: float, device: torch.device):
+    def __init__(self, gnn_layer_cls: type[MessagePassing], activation_cls: type[torch.autograd.Function],
+                 n_layers: int, n_nodes: int, in_feats: int, hidden_channels: int, number_classes: int, dropout: float,
+                 device: torch.device, gcn_layer_kwargs: dict[str, Any]):
         """
         Initialize a new instance of the GNN model of provided size.
         Dropout is added in forward step.
@@ -22,6 +24,7 @@ class AbstractGNN(ABC, nn.Module):
         """
         super(AbstractGNN, self).__init__()
         self.gnn_layer_cls = gnn_layer_cls
+        self.activation_cls = activation_cls
         self.n_layers = n_layers
         self.n_nodes = n_nodes
         self.in_feats = in_feats
@@ -29,10 +32,10 @@ class AbstractGNN(ABC, nn.Module):
         self.number_classes = number_classes
         self.dropout_frac = dropout
         self.device = device
-
+        self.gcn_layer_kwargs = gcn_layer_kwargs
 
     @abstractmethod
-    def forward(self, graph_data: Data) -> torch.Tensor:
+    def forward(self, graph_data: Data, **kwargs: dict) -> torch.Tensor:
         """
         Run forward propagation step of instantiated model.
 

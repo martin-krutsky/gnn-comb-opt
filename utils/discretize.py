@@ -14,8 +14,8 @@ class SigmoidTempAnnealing(Module):
             self.schedule = np.linspace(self.min_mult, self.max_mult, training_steps)
         elif schedule == 'logarithmic':
             self.schedule = np.logspace(self.min_mult, self.max_mult, training_steps)
-        elif schedule == 'cosine':
-            pass  # TODO
+        else:
+            raise Exception('Unsupported temperature annealing schedule name')
 
     def forward(self, x: torch.Tensor, time_idx: int):
         return torch.sigmoid(x * self.schedule[time_idx])

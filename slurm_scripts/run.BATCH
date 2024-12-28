@@ -1,0 +1,33 @@
+#!/bin/bash
+
+#SBATCH --job-name=gnn_co_run
+#SBATCH --output=run_outputs/gnn_co_run.out
+#SBATCH --error=run_outputs/gnn_co_run.err
+#SBATCH --exclude=n[33]
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --mem=20G
+#SBATCH --exclusive
+#SBATCH --partition=cpu
+#SBATCH --time=24:00:00
+
+DOMAIN=MIS
+PROBLEM_SIZE=100
+NODE_DEGREE=3
+
+LOSS=ProductQUBOLoss
+REGULARIZATION=
+ACTIVATION=Sigmoid
+TEMP_SCHEDULE=
+
+
+RANDOM_SEEDS=10
+DATA_SIZE=20
+
+source venv/bin/activate
+
+echo "Running training script"
+export PYTHONPATH=/home/krutsma1/gnn-comb-opt:$PYTHONPATH
+python -u scripts/run.py --rnd_seeds=$RANDOM_SEEDS --domain=$DOMAIN \
+  --problem_size=$PROBLEM_SIZE --node_degree=$NODE_DEGREE --data_size=$DATA_SIZE \
+  --loss=$LOSS --regularization=$REGULARIZATION --activation=$ACTIVATION --temp_schedule=$TEMP_SCHEDULE

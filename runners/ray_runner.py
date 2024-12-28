@@ -23,14 +23,14 @@ class RayRunner(Runner):
     @classmethod
     def train(cls, config: dict, tracking_uri: str, experiment_name: str, run_name: str, args: Namespace, dataset: Dataset,
               seed: int, retraining_model: bool = False) -> (float, torch.Tensor):
-        if config['discretization'] != '' and config['activation'] != 'Sigmoid':
-            raise Exception(f'Choosing soft discretization ({config["discretization"]}) is incompatible with '
-                            f'binarized activation ({config["activation"]})')
+        if config['regularization'] != '' and config['activation'] != 'Sigmoid':
+            raise Exception(f'Choosing soft discretization via regularization: ({config["regularization"]}), '
+                            f'is incompatible with binarized activation ({config["activation"]})')
 
         cls.set_seed(seed)
         dataset_size = len(dataset)
         dataloader = DataLoader(dataset, batch_size=dataset_size, shuffle=False)
-        is_batch = dataset_size > 1
+        has_multiple = dataset_size > 1
 
         if not retraining_model:
             setup_mlflow(
@@ -83,7 +83,7 @@ class RayRunner(Runner):
         for epoch in range(1, args.epochs + 1):
             full_batch = next(iter(dataloader))
             full_batch.to(args.device)
-            train_loss = cls.train_step(model, loss, optimizer, full_batch, is_batch=is_batch)
+            train_loss = cls.train_step(model, loss, optimizer, full_batch, has_multiple=has_multiple)
             prediction = cls.predict(model, full_batch, args.assignment_threshold)
             if not retraining_model:
                 mlflow.log_metrics({
@@ -102,7 +102,7 @@ class RayRunner(Runner):
             else:
                 no_improv_counter += 1
 
-            if last_loss is not None and abs(train_loss - last_loss) < args.early_stopping_small_diff:
+            if last_loss is not None and abs(train_loss - last_loss) < args.early_stopping_tolerance:
                 small_change_counter += 1
             else:
                 small_change_counter = 0

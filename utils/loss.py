@@ -7,7 +7,7 @@ from utils.fuzzy_ops import AndMin, AndProd, AndLuk
 
 
 def loss_qubo(probs: torch.Tensor, q_mat: torch.Tensor, conjunction: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-              is_batch: bool = False) -> torch.Tensor:
+              has_multiple: bool = False) -> torch.Tensor:
     """
     Function to compute cost value for given fuzzy degree of spin, using given conjunction and predefined q matrix.
 
@@ -16,7 +16,7 @@ def loss_qubo(probs: torch.Tensor, q_mat: torch.Tensor, conjunction: Callable[[t
         q_mat: QUBO as torch tensor
     """
     problem_size = q_mat.shape[1]
-    if is_batch:
+    if has_multiple:
         probs_ = probs.reshape(-1, problem_size)
         probs_x = probs_.unsqueeze(1).repeat(1, problem_size, 1)
         probs_y = probs_.unsqueeze(2).repeat(1, 1, problem_size)
@@ -40,8 +40,8 @@ class QUBOLoss:
     def __init__(self, regularization: Callable[[torch.Tensor], torch.Tensor] | None = None):
         self.regularization = regularization
 
-    def __call__(self, probs: torch.Tensor, q_mat: torch.Tensor, is_batch: bool = False):
-        qubo = loss_qubo(probs, q_mat, conjunction=self.conjunction, is_batch=is_batch)
+    def __call__(self, probs: torch.Tensor, q_mat: torch.Tensor, has_multiple: bool = False):
+        qubo = loss_qubo(probs, q_mat, conjunction=self.conjunction, has_multiple=has_multiple)
         if self.regularization is not None:
             qubo += self.regularization(probs)
         return qubo
