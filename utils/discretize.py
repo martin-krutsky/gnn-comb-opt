@@ -14,6 +14,8 @@ class SigmoidTempAnnealing(Module):
             self.schedule = np.linspace(self.min_mult, self.max_mult, training_steps)
         elif schedule == 'logarithmic':
             self.schedule = np.logspace(self.min_mult, self.max_mult, training_steps)
+        elif schedule == 'geometric':
+            self.schedule = np.geomspace(self.min_mult, self.max_mult, training_steps)
         else:
             raise Exception('Unsupported temperature annealing schedule name')
 
