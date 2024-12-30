@@ -32,6 +32,22 @@ class SigmoidTempAnnealing(Module):
         return torch.sigmoid(x * self.schedule[time_idx])
 
 
+class _SigmoidBackwardAnnealing(Function):
+    @staticmethod
+    def forward(ctx, x: torch.Tensor, temperature: torch.Tensor):
+        ctx.save_for_backward(x, temperature)
+        output = torch.sigmoid(x)
+        return output
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        act_input, temperature = ctx.saved_tensors
+
+        # Compute the gradient of sigmoid with temperature
+        sigmoid_grad = temperature * torch.sigmoid(temperature * act_input) * (1 - torch.sigmoid(temperature * act_input))
+        return grad_output * sigmoid_grad, torch.zeros_like(temperature)
+
+
 class SigmoidBackwardAnnealing(Module):
     min_mult: int = 1
     max_mult: int = 10
@@ -41,15 +57,7 @@ class SigmoidBackwardAnnealing(Module):
         self.schedule = get_schedule(schedule, self.min_mult, self.max_mult, training_steps)
 
     def forward(self, x: torch.Tensor, time_idx: int):
-        output = torch.sigmoid(x)
-
-        # Register a hook for the scaled gradient computation
-        def custom_backward_hook(grad):
-            sigmoid_grad = output * (1 - output)  # Gradient of sigmoid
-            scaled_grad = grad * sigmoid_grad * self.schedule[time_idx]
-            return scaled_grad
-
-        output.register_hook(custom_backward_hook)
+        output = _SigmoidBackwardAnnealing.apply(x, torch.tensor(self.schedule[time_idx]))
         return output
 
 
@@ -92,7 +100,7 @@ class SignSigmoid(Function):
         """
         act_input, = ctx.saved_tensors
 
-        # Compute the sigmoid for the gradient
+        # Compute the gradient of sigmoid
         sigmoid_grad = torch.sigmoid(act_input) * (1 - torch.sigmoid(act_input))
         return grad_output * sigmoid_grad
 
