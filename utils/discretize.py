@@ -13,7 +13,7 @@ def get_schedule(name, min_mult, max_mult, steps):
         schedule = np.geomspace(min_mult, max_mult, num=steps)
     elif name == 'inversed':
         schedule = 1 / np.logspace(np.log2(min_mult), np.log2(max_mult), num=steps, base=2)
-    # elif schedule == 'constant':
+    # elif schedule == 'constant':  # for debugging purposes only
     #     self.schedule = np.ones(training_steps)
     else:
         raise Exception('Unsupported temperature annealing schedule name')
@@ -21,7 +21,6 @@ def get_schedule(name, min_mult, max_mult, steps):
 
 
 class SigmoidTempAnnealing(Module):
-    start_constant = 1
     min_mult: int = 1
     max_mult: int = 10
 
@@ -30,11 +29,10 @@ class SigmoidTempAnnealing(Module):
         self.schedule = get_schedule(schedule, self.min_mult, self.max_mult, training_steps)
 
     def forward(self, x: torch.Tensor, time_idx: int):
-        return torch.sigmoid(self.start_constant * x * self.schedule[time_idx])
+        return torch.sigmoid(x * self.schedule[time_idx])
 
 
 class SigmoidBackwardAnnealing(Module):
-    start_constant = 1
     min_mult: int = 1
     max_mult: int = 10
 
@@ -43,20 +41,16 @@ class SigmoidBackwardAnnealing(Module):
         self.schedule = get_schedule(schedule, self.min_mult, self.max_mult, training_steps)
 
     def forward(self, x: torch.Tensor, time_idx: int):
-        # Compute the sigmoid in the forward pass
-        self.output = torch.sigmoid(x)
+        output = torch.sigmoid(x)
 
         # Register a hook for the scaled gradient computation
         def custom_backward_hook(grad):
-            # Compute the scaled sigmoid gradient
-            sigmoid_grad = self.output * (1 - self.output)  # Gradient of sigmoid
-            scaled_grad = grad * sigmoid_grad * self.temperature
+            sigmoid_grad = output * (1 - output)  # Gradient of sigmoid
+            scaled_grad = grad * sigmoid_grad * self.schedule[time_idx]
             return scaled_grad
 
-        # Attach the hook to the output tensor
-        self.output.register_hook(custom_backward_hook)
-
-        return self.output
+        output.register_hook(custom_backward_hook)
+        return output
 
 
 class SignSTE(Function):
