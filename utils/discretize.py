@@ -4,23 +4,59 @@ from torch.autograd import Function
 from torch.nn import Sigmoid, Module
 
 
+def get_schedule(name, min_mult, max_mult, steps):
+    if name == 'linear':
+        schedule = np.linspace(min_mult, max_mult, num=steps)
+    elif name == 'logarithmic':
+        schedule = np.logspace(np.log2(min_mult), np.log2(max_mult), num=steps, base=2)
+    elif name == 'geometric':
+        schedule = np.geomspace(min_mult, max_mult, num=steps)
+    elif name == 'inversed':
+        schedule = 1 / np.logspace(np.log2(min_mult), np.log2(max_mult), num=steps, base=2)
+    # elif schedule == 'constant':
+    #     self.schedule = np.ones(training_steps)
+    else:
+        raise Exception('Unsupported temperature annealing schedule name')
+    return schedule
+
+
 class SigmoidTempAnnealing(Module):
+    start_constant = 1
     min_mult: int = 1
-    max_mult: int = 100
+    max_mult: int = 10
 
     def __init__(self, schedule='linear', training_steps=None):
         super(SigmoidTempAnnealing, self).__init__()
-        if schedule == 'linear':
-            self.schedule = np.linspace(self.min_mult, self.max_mult, training_steps)
-        elif schedule == 'logarithmic':
-            self.schedule = np.logspace(self.min_mult, self.max_mult, training_steps)
-        elif schedule == 'geometric':
-            self.schedule = np.geomspace(self.min_mult, self.max_mult, training_steps)
-        else:
-            raise Exception('Unsupported temperature annealing schedule name')
+        self.schedule = get_schedule(schedule, self.min_mult, self.max_mult, training_steps)
 
     def forward(self, x: torch.Tensor, time_idx: int):
-        return torch.sigmoid(x * self.schedule[time_idx])
+        return torch.sigmoid(self.start_constant * x * self.schedule[time_idx])
+
+
+class SigmoidBackwardAnnealing(Module):
+    start_constant = 1
+    min_mult: int = 1
+    max_mult: int = 10
+
+    def __init__(self, schedule='linear', training_steps=None):
+        super(SigmoidBackwardAnnealing, self).__init__()
+        self.schedule = get_schedule(schedule, self.min_mult, self.max_mult, training_steps)
+
+    def forward(self, x: torch.Tensor, time_idx: int):
+        # Compute the sigmoid in the forward pass
+        self.output = torch.sigmoid(x)
+
+        # Register a hook for the scaled gradient computation
+        def custom_backward_hook(grad):
+            # Compute the scaled sigmoid gradient
+            sigmoid_grad = self.output * (1 - self.output)  # Gradient of sigmoid
+            scaled_grad = grad * sigmoid_grad * self.temperature
+            return scaled_grad
+
+        # Attach the hook to the output tensor
+        self.output.register_hook(custom_backward_hook)
+
+        return self.output
 
 
 class SignSTE(Function):
