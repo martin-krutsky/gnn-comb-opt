@@ -37,10 +37,10 @@ if __name__ == '__main__':
         parser.error(f'Choosing soft discretization via regularization: ({parsed_args.regularization}), '
                      f'is incompatible with binarized activation ({parsed_args.activation})')
 
-    if parsed_args.activation == 'SigmoidTempAnnealing' and parsed_args.temp_schedule == '':
+    if parsed_args.activation in ['SigmoidTempAnnealing', 'SigmoidBackwardAnnealing'] and parsed_args.temp_schedule == '':
         parser.error(f'For temperature annealed sigmoid, specify a non-empty temperature schedule parameter.')
-    elif parsed_args.temp_schedule != '' and parsed_args.activation != 'SigmoidTempAnnealing':
-        parser.error(f'Non-empty temperature schedule is only compatible with temperature annealed sigmoid.')
+    elif parsed_args.temp_schedule != '' and parsed_args.activation not in ['SigmoidTempAnnealing', 'SigmoidBackwardAnnealing']:
+        parser.error(f'Non-empty temperature schedule is only compatible with sigmoids with temperature annealing.')
 
     parsed_args.data_type = getattr(torch, parsed_args.data_type)
     exp_dataset: Dataset = get_dataset(parsed_args.domain, data_size=parsed_args.data_size,

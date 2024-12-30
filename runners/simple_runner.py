@@ -43,9 +43,9 @@ class SimpleRunner(Runner):
         for epoch in range(1, args.epochs + 1):
             data.to(args.device)
             train_loss = cls.train_step(model, loss, optimizer, data, has_multiple=has_multiple,
-                                        time_step=epoch-1 if args.activation == 'SigmoidTempAnnealing' else None)
+                                        time_step=epoch-1 if args.activation in ['SigmoidTempAnnealing', 'SigmoidBackwardAnnealing'] else None)
             prediction = cls.predict(model, data, args.assignment_threshold,
-                                     time_step=epoch-1 if args.activation == 'SigmoidTempAnnealing' else None)
+                                     time_step=epoch-1 if args.activation in ['SigmoidTempAnnealing', 'SigmoidBackwardAnnealing'] else None)
 
             if (epoch % min(1000, int(args.epochs // 10))) == 0:
                 print(f'Epoch: {epoch}, Loss: {train_loss}')
