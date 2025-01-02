@@ -8,7 +8,7 @@ bin/
 datasets/
 logs/
 job_outputs/
-perf_results/
+perf_results**
 viz/
 
 mlruns/
