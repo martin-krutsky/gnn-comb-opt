@@ -78,13 +78,11 @@ class MaxCut(CODomain):
         """
         # compare with traditional solver
         t_start = time()
-        ind_set_nx = cls.goemans_williamson_weighted(nx_graph)
+        nx_bitstring = cls.goemans_williamson_weighted(nx_graph)
+
         t_solve = time() - t_start
-        ind_set_nx_size = len(ind_set_nx)
-
-        # get bitstring list
-        nx_bitstring = [1 if (node in ind_set_nx) else 0 for node in sorted(list(nx_graph.nodes))]
-
+        nx_bitstring[nx_bitstring == -1] = 0
+        ind_set_nx_size = cls.calc_max_cut_size(nx_bitstring, nx_graph)
         return nx_bitstring, ind_set_nx_size, 0, t_solve
 
     @classmethod
@@ -103,9 +101,9 @@ class MaxCut(CODomain):
         bitstring_list = list(best_bitstring)
 
         # compute cost
-        size_mis = cls.calc_max_cut_size(bitstring_list, nx_graph)
+        size_maxcut = cls.calc_max_cut_size(bitstring_list, nx_graph)
 
         # get independent set
         selected_set = set([node for node, entry in enumerate(bitstring_list) if entry == 1])
 
-        return size_mis, selected_set, 0
+        return size_maxcut, selected_set, 0
