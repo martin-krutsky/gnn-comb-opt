@@ -36,7 +36,8 @@ class SimpleRunner(Runner):
         best_train_loss = float('inf')
         best_bit_prediction = torch.zeros((num_nodes,)).type(args.data_type).to(args.device)
         best_epoch = 0
-        early_stopping_counter = 0
+        no_improv_counter = 0
+        small_change_counter = 0
         last_loss = None
         saved_predictions = []
 
@@ -57,14 +58,20 @@ class SimpleRunner(Runner):
                 best_train_loss = train_loss
                 best_epoch = epoch
                 best_bit_prediction = prediction
-
-            if last_loss is not None and train_loss < (best_train_loss - args.early_stopping_tolerance):
-                early_stopping_counter += 1
+                no_improv_counter = 0
             else:
-                early_stopping_counter = 0
+                no_improv_counter += 1
 
-            if early_stopping_counter >= args.early_stopping_patience:
-                print("Early stopping triggered due to no/small improvements")
+            if last_loss is not None and abs(train_loss - last_loss) < args.early_stopping_tolerance:
+                small_change_counter += 1
+            else:
+                small_change_counter = 0
+
+            if no_improv_counter >= args.early_stopping_patience:
+                print("Early stopping triggered due to no improvement")
+                break
+            if small_change_counter >= args.early_stopping_patience:
+                print("Early stopping triggered due to small changes")
                 break
 
             last_loss = train_loss

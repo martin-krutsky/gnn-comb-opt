@@ -8,11 +8,11 @@ def get_schedule(name, min_mult, max_mult, steps):
     if name == 'linear':
         schedule = np.linspace(min_mult, max_mult, num=steps)
     elif name == 'logarithmic':
-        schedule = np.logspace(np.log2(min_mult), np.log2(max_mult), num=steps, base=2)
+        schedule = np.log(np.linspace(2, 2**max_mult, num=steps))
     elif name == 'geometric':
         schedule = np.geomspace(min_mult, max_mult, num=steps)
     elif name == 'inversed':
-        schedule = 1 / np.logspace(np.log2(min_mult), np.log2(max_mult), num=steps, base=2)
+        schedule = 1 / np.geomspace(min_mult, max_mult, num=steps)
     # elif schedule == 'constant':  # for debugging purposes only
     #     self.schedule = np.ones(training_steps)
     else:
