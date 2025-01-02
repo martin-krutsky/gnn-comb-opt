@@ -4,19 +4,21 @@ from torch.autograd import Function
 from torch.nn import Sigmoid, Module
 
 
-def get_schedule(name, min_mult, max_mult, steps):
+def get_schedule(name: str, inversed: bool, min_mult: float, max_mult: float, steps: int) -> np.ndarray[float]:
     if name == 'linear':
         schedule = np.linspace(min_mult, max_mult, num=steps)
     elif name == 'logarithmic':
         schedule = np.log(np.linspace(2, 2**max_mult, num=steps))
     elif name == 'geometric':
         schedule = np.geomspace(min_mult, max_mult, num=steps)
-    elif name == 'inversed':
-        schedule = 1 / np.geomspace(min_mult, max_mult, num=steps)
     # elif schedule == 'constant':  # for debugging purposes only
     #     self.schedule = np.ones(training_steps)
     else:
         raise Exception('Unsupported temperature annealing schedule name')
+
+    if inversed:
+        schedule = 1/schedule
+
     return schedule
 
 
@@ -24,9 +26,9 @@ class SigmoidTempAnnealing(Module):
     min_mult: int = 1
     max_mult: int = 10
 
-    def __init__(self, schedule='linear', training_steps=None):
+    def __init__(self, schedule='linear', inversed_temp=False, training_steps=None):
         super(SigmoidTempAnnealing, self).__init__()
-        self.schedule = get_schedule(schedule, self.min_mult, self.max_mult, training_steps)
+        self.schedule = get_schedule(schedule, inversed_temp, self.min_mult, self.max_mult, training_steps)
 
     def forward(self, x: torch.Tensor, time_idx: int):
         return torch.sigmoid(x * self.schedule[time_idx])
@@ -52,9 +54,9 @@ class SigmoidBackwardAnnealing(Module):
     min_mult: int = 1
     max_mult: int = 10
 
-    def __init__(self, schedule='linear', training_steps=None):
+    def __init__(self, schedule='linear', inversed_temp=False, training_steps=None):
         super(SigmoidBackwardAnnealing, self).__init__()
-        self.schedule = get_schedule(schedule, self.min_mult, self.max_mult, training_steps)
+        self.schedule = get_schedule(schedule, inversed_temp, self.min_mult, self.max_mult, training_steps)
 
     def forward(self, x: torch.Tensor, time_idx: int):
         output = _SigmoidBackwardAnnealing.apply(x, torch.tensor(self.schedule[time_idx]))
@@ -105,9 +107,9 @@ class SignSigmoid(Function):
         return grad_output * sigmoid_grad
 
 
-def l1(x: torch.Tensor, alpha: float = 0.1) -> torch.Tensor:
+def l1(x: torch.Tensor, alpha: float = 1.0) -> torch.Tensor:
     return alpha * torch.norm(x, 1)
 
 
-def entropy(x: torch.Tensor, alpha: float = 0.1) -> torch.Tensor:
+def entropy(x: torch.Tensor, alpha: float = 1.0) -> torch.Tensor:
     return alpha * torch.nn.functional.l1_loss(x, x)

@@ -27,11 +27,13 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('--loss', type=str,
                         choices=['ProductQUBOLoss', 'LukasiewiczQUBOLoss', 'MinQUBOLoss'], default='ProductQUBOLoss')
     parser.add_argument('--regularization', type=str, choices=['', 'l1', 'entropy'], default='')
-    parser.add_argument('--regularization_weight', type=float, default=0.01)
+    parser.add_argument('--regularization_weight', type=float, default=1.0)
     parser.add_argument('--activation', type=str,
                         choices=['Sigmoid', 'SignSTE', 'SignSigmoid', 'SigmoidTempAnnealing', 'SigmoidBackwardAnnealing'], default='Sigmoid')  # Sigmoid with temp. annealing
     parser.add_argument('--temp_schedule', type=str,
-                        choices=['', 'linear', 'logarithmic', 'geometric', 'inversed'], default='')
+                        choices=['', 'linear', 'logarithmic', 'geometric'], default='')
+    parser.add_argument('--inversed_temp', type=bool, default=False)
+
 
 
     DEFAULT_PROBLEM_SIZE = 100

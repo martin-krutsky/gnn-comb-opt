@@ -14,7 +14,7 @@ class GNN(AbstractGNN):
     def __init__(self, gnn_layer_cls: type[MessagePassing], activation_cls: type[torch.autograd.Function],
                  n_layers: int, n_nodes: int, in_feats: int, hidden_channels: int, number_classes: int,
                  dropout: float, device: torch.device, gcn_layer_kwargs: dict[str, Any] = None,
-                 temp_schedule: str | None = None, nr_tr_epochs: int | None = None):
+                 temp_schedule: str | None = None, inversed_temp: bool = False, nr_tr_epochs: int | None = None):
         """
         Initialize a new instance of the GNN model of provided size.
         Dropout is added in forward step.
@@ -40,7 +40,7 @@ class GNN(AbstractGNN):
                 out_channels = hidden_channels
             layer = gnn_layer_cls(in_channels=in_channels, out_channels=out_channels, **gcn_layer_kwargs).to(device)
             self.conv_layers.append(layer)
-        self.final_activation = activation_cls(schedule=temp_schedule, training_steps=nr_tr_epochs) \
+        self.final_activation = activation_cls(schedule=temp_schedule, inversed_temp=inversed_temp, training_steps=nr_tr_epochs) \
             if temp_schedule is not None else activation_cls()
 
     def forward(self, graph_data: Data, time_step: int | None = None) -> torch.Tensor:

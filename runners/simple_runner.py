@@ -24,7 +24,8 @@ class SimpleRunner(Runner):
         )
 
         model: AbstractGNN = model_cls(gcn_cls, act_cls, **model_hyperparams, device=args.device,
-                                       temp_schedule=args.temp_schedule or None, nr_tr_epochs=args.epochs or None).type(
+                                       temp_schedule=args.temp_schedule or None, inversed_temp=args.inversed_temp,
+                                       nr_tr_epochs=args.epochs or None).type(
             args.data_type).to(args.device)
         optimizer_params = {
             "lr": args.lr,
