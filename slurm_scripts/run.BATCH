@@ -1,31 +1,31 @@
 #!/bin/bash
 
-#SBATCH --job-name=gco_base
-#SBATCH --output=job_outputs/gco_base.out
-#SBATCH --error=job_outputs/gco_base.err
+#SBATCH --output="job_outputs/%x.out"
+#SBATCH --error="job_outputs/%x.err"
 #SBATCH --exclude=n[33]
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --mem=20G
+#SBATCH --mem=5G
 #SBATCH --partition=cpu
 #SBATCH --time=24:00:00
 
-DOMAIN=MIS
-PROBLEM_SIZE=100
-NODE_DEGREE=3
+DOMAIN=${1}
+PROBLEM_SIZE=${2}
+NODE_DEGREE=${3}
 
-LOSS=ProductQUBOLoss
-REGULARIZATION=""
-ACTIVATION=Sigmoid
-TEMP_SCHEDULE=
-EXPERIMENT_NAME=baseline
+LOSS=${4}
+REGULARIZATION=${5}
+ACTIVATION=${6}
+TEMP_SCHEDULE=${7}
+INVERSED_TEMP=${8}
+EXPERIMENT_NAME=${9}
 
 
-RANDOM_SEEDS=10
+RANDOM_SEEDS=5
 DATA_SIZE=20
 
 source venv/bin/activate
 
 echo "Running training script"
 export PYTHONPATH=/home/krutsma1/gnn-comb-opt:$PYTHONPATH
-python -u scripts/run.py --rnd_seeds $RANDOM_SEEDS --domain "$DOMAIN" --problem_size $PROBLEM_SIZE --node_degree $NODE_DEGREE --data_size $DATA_SIZE --loss "$LOSS" --regularization "$REGULARIZATION" --activation "$ACTIVATION" --temp_schedule "$TEMP_SCHEDULE" --experiment_name "$EXPERIMENT_NAME"
+python -u scripts/run.py --rnd_seeds $RANDOM_SEEDS --domain "$DOMAIN" --problem_size $PROBLEM_SIZE --node_degree $NODE_DEGREE --data_size $DATA_SIZE --loss "$LOSS" --regularization "$REGULARIZATION" --activation "$ACTIVATION" --temp_schedule "$TEMP_SCHEDULE" --inversed_temp $INVERSED_TEMP --experiment_name "$EXPERIMENT_NAME"
