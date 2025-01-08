@@ -11,15 +11,19 @@ import utils.loss as loss_module
 
 
 
-def save_preds_weights(args, epoch, preds, logits, weights, bias):
+def save_preds_weights(args, epoch, rnd_seeed, preds, logits, weights, bias):
     result_path = args.result_path.format(experiment_name=args.experiment_name)
     data_folder = f'{args.domain}/{args.node_degree}/{args.problem_size}'
     full_path = os.path.join(result_path, data_folder)
 
-    torch.save(preds, os.path.join(full_path, f"preds/{epoch}.pth"))
-    torch.save(logits, os.path.join(full_path, f"logits/{epoch}.pth"))
-    torch.save(weights, os.path.join(full_path, f"weights/{epoch}.pth"))
-    torch.save(bias, os.path.join(full_path, f"bias/{epoch}.pth"))
+    os.makedirs(os.path.join(full_path, f"preds/{rnd_seeed}"), exist_ok=True)
+    torch.save(preds, os.path.join(full_path, f"preds/{rnd_seeed}/{epoch}.pth"))
+    os.makedirs(os.path.join(full_path, f"logits/{rnd_seeed}"), exist_ok=True)
+    torch.save(logits, os.path.join(full_path, f"logits/{rnd_seeed}/{epoch}.pth"))
+    os.makedirs(os.path.join(full_path, f"weights/{rnd_seeed}"), exist_ok=True)
+    torch.save(weights, os.path.join(full_path, f"weights/{rnd_seeed}/{epoch}.pth"))
+    os.makedirs(os.path.join(full_path, f"bias/{rnd_seeed}"), exist_ok=True)
+    torch.save(bias, os.path.join(full_path, f"bias/{rnd_seeed}/{epoch}.pth"))
 
 
 class SimpleRunner(Runner):
@@ -56,7 +60,7 @@ class SimpleRunner(Runner):
         preds, logits, weights, bias = cls.predict_and_track(
             model, data, args.assignment_threshold,
             time_step=0 if args.activation in ['SigmoidTempAnnealing', 'SigmoidBackwardAnnealing'] else None)
-        save_preds_weights(args, 0, preds, logits, weights, bias)
+        save_preds_weights(args, 0, seed, preds, logits, weights, bias)
 
         for epoch in range(1, args.epochs + 1):
             data.to(args.device)
@@ -70,7 +74,7 @@ class SimpleRunner(Runner):
                     model, data, args.assignment_threshold,
                     time_step=epoch - 1 if args.activation in ['SigmoidTempAnnealing',
                                                                'SigmoidBackwardAnnealing'] else None)
-                save_preds_weights(args, epoch, preds, logits, weights, bias)
+                save_preds_weights(args, epoch, seed, preds, logits, weights, bias)
 
             if (epoch % min(1000, int(args.epochs // 10))) == 0:
                 print(f'Epoch: {epoch}, Loss: {train_loss}')
@@ -103,7 +107,7 @@ class SimpleRunner(Runner):
         preds, logits, weights, bias = cls.predict_and_track(
             model, data, args.assignment_threshold,
             time_step=epoch-1 if args.activation in ['SigmoidTempAnnealing', 'SigmoidBackwardAnnealing'] else None)
-        save_preds_weights(args, epoch, preds, logits, weights, bias)
+        save_preds_weights(args, epoch, seed, preds, logits, weights, bias)
 
         if save_model:
             cls.hash_save_model(model, model_hyperparams, optimizer_params, args, seed)
