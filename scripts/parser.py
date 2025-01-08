@@ -74,6 +74,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('--visualize', action='store_true')
     parser.add_argument('--result_path', type=str, default='perf_results/{experiment_name}/')
     parser.add_argument('--experiment_name', type=str, default='baseline')
+    parser.add_argument('--save_params_every_n_epochs', type=int, default=10)
 
     # Ray Tune flags
     parser.add_argument('--use_ray_tune', action='store_true')

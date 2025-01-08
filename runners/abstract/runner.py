@@ -74,6 +74,16 @@ class Runner(ABC):
             return pred.detach().cpu().T
 
     @staticmethod
+    def predict_and_track(model: Module, data: Data, prob_threshold: float, time_step: int | None = None) -> (
+            torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor):
+        model.eval()
+        with torch.no_grad():
+            out = model(data, time_step=time_step)
+            pred = (out >= prob_threshold).int()
+            weights, bias = model.conv_layers[-1].lin.weight.data, model.conv_layers[-1].bias.data
+            return pred.detach().cpu().squeeze(), out.detach().cpu().squeeze(), weights.detach().cpu().squeeze(), bias.detach().cpu().squeeze()
+
+    @staticmethod
     def hash_dict(dictionary: dict, hash_len: int = 6):
         sha1 = hashlib.sha1()
         sha1.update(json.dumps(dictionary, sort_keys=True).encode())
