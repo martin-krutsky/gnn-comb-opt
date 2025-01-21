@@ -78,10 +78,10 @@ class Runner(ABC):
             torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor):
         model.eval()
         with torch.no_grad():
-            out = model(data, time_step=time_step)
+            out, preact = model(data, time_step=time_step, return_preact=True)
             pred = (out >= prob_threshold).int()
             weights, bias = model.conv_layers[-1].lin.weight.data, model.conv_layers[-1].bias.data
-            return pred.detach().cpu().squeeze(), out.detach().cpu().squeeze(), weights.detach().cpu().squeeze(), bias.detach().cpu().squeeze()
+            return pred.detach().cpu().squeeze(), out.detach().cpu().squeeze(), preact.detach().cpu().squeeze(), weights.detach().cpu().squeeze(), bias.detach().cpu().squeeze()
 
     @staticmethod
     def hash_dict(dictionary: dict, hash_len: int = 6):

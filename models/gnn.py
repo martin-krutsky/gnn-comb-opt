@@ -43,7 +43,7 @@ class GNN(AbstractGNN):
         self.final_activation = activation_cls(schedule=temp_schedule, inversed_temp=inversed_temp, training_steps=nr_tr_epochs) \
             if temp_schedule is not None else activation_cls()
 
-    def forward(self, graph_data: Data, time_step: int | None = None) -> torch.Tensor:
+    def forward(self, graph_data: Data, time_step: int | None = None, return_preact: bool = False) -> torch.Tensor | (torch.Tensor, torch.Tensor):
         """
         Run forward propagation step of instantiated model.
 
@@ -60,9 +60,13 @@ class GNN(AbstractGNN):
                 h = torch.relu(h)
                 h = F.dropout(h, p=self.dropout_frac)
         if time_step is not None:
-            h = self.final_activation(h, time_step)
+            y = self.final_activation(h, time_step)
         elif isinstance(self.final_activation, torch.autograd.Function):
-            h = self.final_activation.apply(h)
+            y = self.final_activation.apply(h)
         else:
-            h = self.final_activation(h)
-        return h
+            y = self.final_activation(h)
+
+        if return_preact:
+            return y, h
+        else:
+            return y

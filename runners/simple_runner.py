@@ -11,26 +11,28 @@ import utils.loss as loss_module
 
 
 
-def save_preds_weights(args, epoch, rnd_seeed, preds, logits, weights, bias):
+def save_preds_weights(args, epoch, rnd_seed, graph_id, preds, logits, preacts, weights, bias):
     result_path = args.result_path.format(experiment_name=args.experiment_name)
-    data_folder = f'{args.domain}/{args.node_degree}/{args.problem_size}'
+    data_folder = f'{args.domain}/{args.node_degree}/{args.problem_size}/{graph_id}/{rnd_seed}'
     full_path = os.path.join(result_path, data_folder)
 
-    os.makedirs(os.path.join(full_path, f"preds/{rnd_seeed}"), exist_ok=True)
-    torch.save(preds, os.path.join(full_path, f"preds/{rnd_seeed}/{epoch}.pth"))
-    os.makedirs(os.path.join(full_path, f"logits/{rnd_seeed}"), exist_ok=True)
-    torch.save(logits, os.path.join(full_path, f"logits/{rnd_seeed}/{epoch}.pth"))
-    os.makedirs(os.path.join(full_path, f"weights/{rnd_seeed}"), exist_ok=True)
-    torch.save(weights, os.path.join(full_path, f"weights/{rnd_seeed}/{epoch}.pth"))
-    os.makedirs(os.path.join(full_path, f"bias/{rnd_seeed}"), exist_ok=True)
-    torch.save(bias, os.path.join(full_path, f"bias/{rnd_seeed}/{epoch}.pth"))
+    os.makedirs(os.path.join(full_path, f"preds"), exist_ok=True)
+    torch.save(preds, os.path.join(full_path, f"preds/{epoch}.pth"))
+    os.makedirs(os.path.join(full_path, f"logits"), exist_ok=True)
+    torch.save(logits, os.path.join(full_path, f"logits/{epoch}.pth"))
+    os.makedirs(os.path.join(full_path, f"preacts"), exist_ok=True)
+    torch.save(preacts, os.path.join(full_path, f"preacts/{epoch}.pth"))
+    os.makedirs(os.path.join(full_path, f"weights"), exist_ok=True)
+    torch.save(weights, os.path.join(full_path, f"weights/{epoch}.pth"))
+    os.makedirs(os.path.join(full_path, f"bias"), exist_ok=True)
+    torch.save(bias, os.path.join(full_path, f"bias/{epoch}.pth"))
 
 
 class SimpleRunner(Runner):
     @classmethod
     def train_with_single_batch(
             cls, data: Data, args: Namespace, num_nodes: int, model_hyperparams: dict, has_multiple: bool, seed: int,
-            save_model: bool = False, visualize: bool = False
+            graph_id: int, save_model: bool = False, visualize: bool = False
         ) -> tuple[float, torch.Tensor, list[torch.Tensor]] | tuple[float, torch.Tensor]:
         cls.set_seed(seed)
         model_cls, gcn_cls, act_cls, reg_func, loss_cls = cls.get_torch_classes(
@@ -57,10 +59,10 @@ class SimpleRunner(Runner):
         saved_predictions = []
 
         data.to(args.device)
-        preds, logits, weights, bias = cls.predict_and_track(
+        preds, logits, preacts, weights, bias = cls.predict_and_track(
             model, data, args.assignment_threshold,
             time_step=0 if args.activation in ['SigmoidTempAnnealing', 'SigmoidBackwardAnnealing'] else None)
-        save_preds_weights(args, 0, seed, preds, logits, weights, bias)
+        save_preds_weights(args, 0, seed, graph_id, preds, logits, preacts, weights, bias)
 
         for epoch in range(1, args.epochs + 1):
             data.to(args.device)
@@ -70,11 +72,11 @@ class SimpleRunner(Runner):
                                      time_step=epoch-1 if args.activation in ['SigmoidTempAnnealing', 'SigmoidBackwardAnnealing'] else None)
 
             if (epoch % args.save_params_every_n_epochs) == 0:
-                preds, logits, weights, bias = cls.predict_and_track(
+                preds, logits, preacts, weights, bias = cls.predict_and_track(
                     model, data, args.assignment_threshold,
                     time_step=epoch - 1 if args.activation in ['SigmoidTempAnnealing',
                                                                'SigmoidBackwardAnnealing'] else None)
-                save_preds_weights(args, epoch, seed, preds, logits, weights, bias)
+                save_preds_weights(args, epoch, seed, graph_id, preds, logits, preacts, weights, bias)
 
             if (epoch % min(1000, int(args.epochs // 10))) == 0:
                 print(f'Epoch: {epoch}, Loss: {train_loss}')
@@ -104,10 +106,10 @@ class SimpleRunner(Runner):
 
             last_loss = train_loss
 
-        preds, logits, weights, bias = cls.predict_and_track(
+        preds, logits, preacts, weights, bias = cls.predict_and_track(
             model, data, args.assignment_threshold,
             time_step=epoch-1 if args.activation in ['SigmoidTempAnnealing', 'SigmoidBackwardAnnealing'] else None)
-        save_preds_weights(args, epoch, seed, preds, logits, weights, bias)
+        save_preds_weights(args, epoch, seed, graph_id, preds, logits, preacts, weights, bias)
 
         if save_model:
             cls.hash_save_model(model, model_hyperparams, optimizer_params, args, seed)
@@ -139,10 +141,10 @@ class SimpleRunner(Runner):
             dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
         best_train_losses, best_bit_predictions = [], []
-        for data in dataloader:
+        for graph_id, data in enumerate(dataloader):
             best_train_loss, best_bit_prediction, predictions = cls.train_with_single_batch(
                 data, args, dataset[0].num_nodes, model_hyperparams, use_as_batch and dataset_size > 1,
-                seed, save_model, visualize
+                seed, graph_id, save_model, visualize
             )
             if visualize and len(predictions) > 0:
                 cls.postprocess_animate(dataset, predictions)
