@@ -2,7 +2,7 @@
 
 CMD_TO_RUN=sbatch                     # Command to be run
 CONFIG_FILE="slurm_scripts/experiments_config.txt"  # Path to your configuration file
-WAIT_TIME=5                           # Time to wait in seconds
+WAIT_TIME=2                           # Time to wait in seconds
 
 # Read the config file line by line
 while IFS= read -r line; do

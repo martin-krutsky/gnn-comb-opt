@@ -166,3 +166,5 @@ mc5_igeo,./slurm_scripts/run.BATCH,MaxCut,100,5,ProductQUBOLoss,,SigmoidTempAnne
 mc10_igeo,./slurm_scripts/run.BATCH,MaxCut,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
 mc20_igeo,./slurm_scripts/run.BATCH,MaxCut,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
 mc50_igeo,./slurm_scripts/run.BATCH,MaxCut,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
+
+# END
