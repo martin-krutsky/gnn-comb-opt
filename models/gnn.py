@@ -43,7 +43,7 @@ class GNN(AbstractGNN):
         self.final_activation = activation_cls(schedule=temp_schedule, inversed_temp=inversed_temp, training_steps=nr_tr_epochs) \
             if temp_schedule is not None else activation_cls()
 
-    def forward(self, graph_data: Data, time_step: int | None = None, return_preact: bool = False) -> torch.Tensor | (torch.Tensor, torch.Tensor):
+    def forward(self, graph_data: Data, time_step: int | None = None, return_preact: bool = False) -> [torch.Tensor | (torch.Tensor, torch.Tensor)]:
         """
         Run forward propagation step of instantiated model.
 
