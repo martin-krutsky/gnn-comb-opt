@@ -3,8 +3,8 @@ import copy
 
 from matplotlib.colors import LogNorm
 import matplotlib.pyplot as plt
+plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
-plt.rcParams['font.serif'] = ['Times New Roman']
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -26,7 +26,7 @@ random_seeds = 5
 
 
 def create_result_df():
-    result_df = pd.DataFrame(
+    df = pd.DataFrame(
         columns=['graph_id', 'rnd_seed', 'experiment', 'domain', 'd_regular', 'graph_size', 'qubo_loss', 'pred_size',
                  'solver_size', 'violation', 'improvement'])
     for exp in experiments:
@@ -38,8 +38,8 @@ def create_result_df():
                         curr_df = curr_df.assign(rnd_seed=rnd_seed, experiment=exp, domain=dom, d_regular=dreg,
                                                  graph_size=gsize)
                         curr_df = curr_df.reset_index(names='graph_id')
-                        result_df = pd.concat([result_df if not result_df.empty else None, curr_df])
-    return result_df.reset_index()
+                        df = pd.concat([df if not df.empty else None, curr_df])
+    return df.reset_index()
 
 
 def create_plot(experiment, values_dict, domain, dreg, dict_type='logits', n_bins=11):
@@ -100,7 +100,7 @@ for exp in experiments:
     for dom in domains:
         print(f'Domain: {dom}')
         for dreg in dregs:
-            print("D-regularity: {dreg}")
+            print(f"D-regularity: {dreg}")
             logits_dict, preacts_dict = {}, {}  # e: np.array([]) for e in range(0, 100001, PLOT_EVERY_NTH)
             dict_map = {'logits': logits_dict, 'preacts': preacts_dict}
             for graph_id in range(nr_of_graphs):
