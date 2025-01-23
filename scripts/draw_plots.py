@@ -19,7 +19,7 @@ dregs = [3, 5, 10, 20, 30, 40, 50]
 graph_sizes = [100]
 random_seeds = 5
 
-best_seeds_df = pd.read_csv('../best_seeds.csv')
+best_seeds_df = pd.read_csv('best_seeds.csv')
 int(best_seeds_df[
     (best_seeds_df['domain'] == 'MIS') & (best_seeds_df['experiment'] == 'baseline') & (best_seeds_df['d_regular'] == 3) & (best_seeds_df['graph_id'] == 0)
 ]['rnd_seed'].iloc[0])
@@ -29,6 +29,7 @@ for exp in experiments:
     print(exp)
     for dom in domains:
         for dreg in dregs:
+            print(dreg)
             logits_dict, preacts_dict = {}, {}  # e: np.array([]) for e in range(0, 100001, 1000)
             dict_map = {'logits': logits_dict, 'preacts': preacts_dict}
             for graph_id in range(20):
@@ -40,6 +41,8 @@ for exp in experiments:
                     for root, dirs, files in os.walk(curr_dir):
                         for file in files:
                             epoch = int(file.split('.')[0])
+                            if (epoch % 100) != 0:
+                                continue
                             file_path = os.path.join(root, file)
                             curr_data = torch.load(file_path).numpy()
                             if epoch not in dict_map[val_name]:
