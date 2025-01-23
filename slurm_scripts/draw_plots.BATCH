@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#SBATCH --output="job_outputs/draw_plots.out"
+#SBATCH --error="job_outputs/draw_plots.err"
+#SBATCH --exclude=n[33]
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --mem=1G
+#SBATCH --partition=cpufast
+#SBATCH --time=4:00:00
+
+source venv/bin/activate
+
+echo "Drawing plots"
+export PYTHONPATH=/home/krutsma1/gnn-comb-opt:$PYTHONPATH
+python -u scripts/draw_plots.py

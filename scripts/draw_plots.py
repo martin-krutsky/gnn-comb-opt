@@ -19,7 +19,7 @@ dregs = [3, 5, 10, 20, 30, 40, 50]
 graph_sizes = [100]
 random_seeds = 5
 
-best_seeds_df = pd.read_csv('best_seeds.csv')
+best_seeds_df = pd.read_csv('../best_seeds.csv')
 int(best_seeds_df[
     (best_seeds_df['domain'] == 'MIS') & (best_seeds_df['experiment'] == 'baseline') & (best_seeds_df['d_regular'] == 3) & (best_seeds_df['graph_id'] == 0)
 ]['rnd_seed'].iloc[0])
