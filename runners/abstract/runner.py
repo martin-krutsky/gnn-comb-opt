@@ -128,7 +128,7 @@ class Runner(ABC):
             ind_set_bitstring_nx, ind_set_nx_size, nx_number_violations, t_solve = dataset.domain.run_solver(
                 datapoint.nx_graph)
             print(
-                f'{dataset.domain.criterion_name} found by solver is {ind_set_nx_size} with {number_violations} violations')
+                f'{dataset.domain.criterion_name} found by solver is {ind_set_nx_size} with {nx_number_violations} violations')
 
             imp = size_mis - ind_set_nx_size if dataset.domain.maximization else ind_set_nx_size - size_mis
             improvements.append(imp)
