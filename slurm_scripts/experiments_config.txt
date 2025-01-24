@@ -3,12 +3,16 @@ is3_base,./slurm_scripts/run.BATCH,MIS,100,3,ProductQUBOLoss,,Sigmoid,,False,bas
 is5_base,./slurm_scripts/run.BATCH,MIS,100,5,ProductQUBOLoss,,Sigmoid,,False,baseline
 is10_base,./slurm_scripts/run.BATCH,MIS,100,10,ProductQUBOLoss,,Sigmoid,,False,baseline
 is20_base,./slurm_scripts/run.BATCH,MIS,100,20,ProductQUBOLoss,,Sigmoid,,False,baseline
+is30_base,./slurm_scripts/run.BATCH,MIS,100,30,ProductQUBOLoss,,Sigmoid,,False,baseline
+is40_base,./slurm_scripts/run.BATCH,MIS,100,40,ProductQUBOLoss,,Sigmoid,,False,baseline
 is50_base,./slurm_scripts/run.BATCH,MIS,100,50,ProductQUBOLoss,,Sigmoid,,False,baseline
 
 mc3_base,./slurm_scripts/run.BATCH,MaxCut,100,3,ProductQUBOLoss,,Sigmoid,,False,baseline
 mc5_base,./slurm_scripts/run.BATCH,MaxCut,100,5,ProductQUBOLoss,,Sigmoid,,False,baseline
 mc10_base,./slurm_scripts/run.BATCH,MaxCut,100,10,ProductQUBOLoss,,Sigmoid,,False,baseline
 mc20_base,./slurm_scripts/run.BATCH,MaxCut,100,20,ProductQUBOLoss,,Sigmoid,,False,baseline
+mc30_base,./slurm_scripts/run.BATCH,MaxCut,100,30,ProductQUBOLoss,,Sigmoid,,False,baseline
+mc40_base,./slurm_scripts/run.BATCH,MaxCut,100,40,ProductQUBOLoss,,Sigmoid,,False,baseline
 mc50_base,./slurm_scripts/run.BATCH,MaxCut,100,50,ProductQUBOLoss,,Sigmoid,,False,baseline
 
 # lukasiewicz
@@ -16,12 +20,16 @@ is3_luka,./slurm_scripts/run.BATCH,MIS,100,3,LukasiewiczQUBOLoss,,Sigmoid,,False
 is5_luka,./slurm_scripts/run.BATCH,MIS,100,5,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
 is10_luka,./slurm_scripts/run.BATCH,MIS,100,10,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
 is20_luka,./slurm_scripts/run.BATCH,MIS,100,20,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
+is30_luka,./slurm_scripts/run.BATCH,MIS,100,30,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
+is40_luka,./slurm_scripts/run.BATCH,MIS,100,40,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
 is50_luka,./slurm_scripts/run.BATCH,MIS,100,50,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
 
 mc3_luka,./slurm_scripts/run.BATCH,MaxCut,100,3,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
 mc5_luka,./slurm_scripts/run.BATCH,MaxCut,100,5,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
 mc10_luka,./slurm_scripts/run.BATCH,MaxCut,100,10,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
 mc20_luka,./slurm_scripts/run.BATCH,MaxCut,100,20,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
+mc30_luka,./slurm_scripts/run.BATCH,MaxCut,100,30,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
+mc40_luka,./slurm_scripts/run.BATCH,MaxCut,100,40,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
 mc50_luka,./slurm_scripts/run.BATCH,MaxCut,100,50,LukasiewiczQUBOLoss,,Sigmoid,,False,lukasiewicz
 
 # min
@@ -29,12 +37,16 @@ is3_min,./slurm_scripts/run.BATCH,MIS,100,3,MinQUBOLoss,,Sigmoid,,False,min
 is5_min,./slurm_scripts/run.BATCH,MIS,100,5,MinQUBOLoss,,Sigmoid,,False,min
 is10_min,./slurm_scripts/run.BATCH,MIS,100,10,MinQUBOLoss,,Sigmoid,,False,min
 is20_min,./slurm_scripts/run.BATCH,MIS,100,20,MinQUBOLoss,,Sigmoid,,False,min
+is30_min,./slurm_scripts/run.BATCH,MIS,100,30,MinQUBOLoss,,Sigmoid,,False,min
+is40_min,./slurm_scripts/run.BATCH,MIS,100,40,MinQUBOLoss,,Sigmoid,,False,min
 is50_min,./slurm_scripts/run.BATCH,MIS,100,50,MinQUBOLoss,,Sigmoid,,False,min
 
 mc3_min,./slurm_scripts/run.BATCH,MaxCut,100,3,MinQUBOLoss,,Sigmoid,,False,min
 mc5_min,./slurm_scripts/run.BATCH,MaxCut,100,5,MinQUBOLoss,,Sigmoid,,False,min
 mc10_min,./slurm_scripts/run.BATCH,MaxCut,100,10,MinQUBOLoss,,Sigmoid,,False,min
 mc20_min,./slurm_scripts/run.BATCH,MaxCut,100,20,MinQUBOLoss,,Sigmoid,,False,min
+mc30_min,./slurm_scripts/run.BATCH,MaxCut,100,30,MinQUBOLoss,,Sigmoid,,False,min
+mc40_min,./slurm_scripts/run.BATCH,MaxCut,100,40,MinQUBOLoss,,Sigmoid,,False,min
 mc50_min,./slurm_scripts/run.BATCH,MaxCut,100,50,MinQUBOLoss,,Sigmoid,,False,min
 
 #,l1
@@ -42,12 +54,16 @@ is3_l1,./slurm_scripts/run.BATCH,MIS,100,3,ProductQUBOLoss,l1,Sigmoid,,False,l1
 is5_l1,./slurm_scripts/run.BATCH,MIS,100,5,ProductQUBOLoss,l1,Sigmoid,,False,l1
 is10_l1,./slurm_scripts/run.BATCH,MIS,100,10,ProductQUBOLoss,l1,Sigmoid,,False,l1
 is20_l1,./slurm_scripts/run.BATCH,MIS,100,20,ProductQUBOLoss,l1,Sigmoid,,False,l1
+is30_l1,./slurm_scripts/run.BATCH,MIS,100,30,ProductQUBOLoss,l1,Sigmoid,,False,l1
+is40_l1,./slurm_scripts/run.BATCH,MIS,100,40,ProductQUBOLoss,l1,Sigmoid,,False,l1
 is50_l1,./slurm_scripts/run.BATCH,MIS,100,50,ProductQUBOLoss,l1,Sigmoid,,False,l1
 
 mc3_l1,./slurm_scripts/run.BATCH,MaxCut,100,3,ProductQUBOLoss,l1,Sigmoid,,False,l1
 mc5_l1,./slurm_scripts/run.BATCH,MaxCut,100,5,ProductQUBOLoss,l1,Sigmoid,,False,l1
 mc10_l1,./slurm_scripts/run.BATCH,MaxCut,100,10,ProductQUBOLoss,l1,Sigmoid,,False,l1
 mc20_l1,./slurm_scripts/run.BATCH,MaxCut,100,20,ProductQUBOLoss,l1,Sigmoid,,False,l1
+mc30_l1,./slurm_scripts/run.BATCH,MaxCut,100,30,ProductQUBOLoss,l1,Sigmoid,,False,l1
+mc40_l1,./slurm_scripts/run.BATCH,MaxCut,100,40,ProductQUBOLoss,l1,Sigmoid,,False,l1
 mc50_l1,./slurm_scripts/run.BATCH,MaxCut,100,50,ProductQUBOLoss,l1,Sigmoid,,False,l1
 
 # entropy
@@ -55,12 +71,16 @@ is3_ent,./slurm_scripts/run.BATCH,MIS,100,3,ProductQUBOLoss,entropy,Sigmoid,,Fal
 is5_ent,./slurm_scripts/run.BATCH,MIS,100,5,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
 is10_ent,./slurm_scripts/run.BATCH,MIS,100,10,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
 is20_ent,./slurm_scripts/run.BATCH,MIS,100,20,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
+is30_ent,./slurm_scripts/run.BATCH,MIS,100,30,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
+is40_ent,./slurm_scripts/run.BATCH,MIS,100,40,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
 is50_ent,./slurm_scripts/run.BATCH,MIS,100,50,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
 
 mc3_ent,./slurm_scripts/run.BATCH,MaxCut,100,3,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
 mc5_ent,./slurm_scripts/run.BATCH,MaxCut,100,5,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
 mc10_ent,./slurm_scripts/run.BATCH,MaxCut,100,10,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
 mc20_ent,./slurm_scripts/run.BATCH,MaxCut,100,20,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
+mc30_ent,./slurm_scripts/run.BATCH,MaxCut,100,30,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
+mc40_ent,./slurm_scripts/run.BATCH,MaxCut,100,40,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
 mc50_ent,./slurm_scripts/run.BATCH,MaxCut,100,50,ProductQUBOLoss,entropy,Sigmoid,,False,entropy
 
 # -> step function; <- straight-through estimation
@@ -68,12 +88,16 @@ is3_ste,./slurm_scripts/run.BATCH,MIS,100,3,ProductQUBOLoss,,SignSTE,,False,sign
 is5_ste,./slurm_scripts/run.BATCH,MIS,100,5,ProductQUBOLoss,,SignSTE,,False,sign_ste
 is10_ste,./slurm_scripts/run.BATCH,MIS,100,10,ProductQUBOLoss,,SignSTE,,False,sign_ste
 is20_ste,./slurm_scripts/run.BATCH,MIS,100,20,ProductQUBOLoss,,SignSTE,,False,sign_ste
+is30_ste,./slurm_scripts/run.BATCH,MIS,100,30,ProductQUBOLoss,,SignSTE,,False,sign_ste
+is40_ste,./slurm_scripts/run.BATCH,MIS,100,40,ProductQUBOLoss,,SignSTE,,False,sign_ste
 is50_ste,./slurm_scripts/run.BATCH,MIS,100,50,ProductQUBOLoss,,SignSTE,,False,sign_ste
 
 mc3_ste,./slurm_scripts/run.BATCH,MaxCut,100,3,ProductQUBOLoss,,SignSTE,,False,sign_ste
 mc5_ste,./slurm_scripts/run.BATCH,MaxCut,100,5,ProductQUBOLoss,,SignSTE,,False,sign_ste
 mc10_ste,./slurm_scripts/run.BATCH,MaxCut,100,10,ProductQUBOLoss,,SignSTE,,False,sign_ste
 mc20_ste,./slurm_scripts/run.BATCH,MaxCut,100,20,ProductQUBOLoss,,SignSTE,,False,sign_ste
+mc30_ste,./slurm_scripts/run.BATCH,MaxCut,100,30,ProductQUBOLoss,,SignSTE,,False,sign_ste
+mc40_ste,./slurm_scripts/run.BATCH,MaxCut,100,40,ProductQUBOLoss,,SignSTE,,False,sign_ste
 mc50_ste,./slurm_scripts/run.BATCH,MaxCut,100,50,ProductQUBOLoss,,SignSTE,,False,sign_ste
 
 # -> step function; <- sigmoid
@@ -81,12 +105,16 @@ is3_sig,./slurm_scripts/run.BATCH,MIS,100,3,ProductQUBOLoss,,SignSigmoid,,False,
 is5_sig,./slurm_scripts/run.BATCH,MIS,100,5,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
 is10_sig,./slurm_scripts/run.BATCH,MIS,100,10,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
 is20_sig,./slurm_scripts/run.BATCH,MIS,100,20,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
+is30_sig,./slurm_scripts/run.BATCH,MIS,100,30,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
+is40_sig,./slurm_scripts/run.BATCH,MIS,100,40,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
 is50_sig,./slurm_scripts/run.BATCH,MIS,100,50,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
 
 mc3_sig,./slurm_scripts/run.BATCH,MaxCut,100,3,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
 mc5_sig,./slurm_scripts/run.BATCH,MaxCut,100,5,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
 mc10_sig,./slurm_scripts/run.BATCH,MaxCut,100,10,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
 mc20_sig,./slurm_scripts/run.BATCH,MaxCut,100,20,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
+mc30_sig,./slurm_scripts/run.BATCH,MaxCut,100,30,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
+mc40_sig,./slurm_scripts/run.BATCH,MaxCut,100,40,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
 mc50_sig,./slurm_scripts/run.BATCH,MaxCut,100,50,ProductQUBOLoss,,SignSigmoid,,False,sign_sigmoid
 
 # Temperature annealing - linear schedule
@@ -94,77 +122,50 @@ is3_tlin,./slurm_scripts/run.BATCH,MIS,100,3,ProductQUBOLoss,,SigmoidTempAnneali
 is5_tlin,./slurm_scripts/run.BATCH,MIS,100,5,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
 is10_tlin,./slurm_scripts/run.BATCH,MIS,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
 is20_tlin,./slurm_scripts/run.BATCH,MIS,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
+is30_tlin,./slurm_scripts/run.BATCH,MIS,100,30,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
+is40_tlin,./slurm_scripts/run.BATCH,MIS,100,40,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
 is50_tlin,./slurm_scripts/run.BATCH,MIS,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
 
 mc3_tlin,./slurm_scripts/run.BATCH,MaxCut,100,3,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
 mc5_tlin,./slurm_scripts/run.BATCH,MaxCut,100,5,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
 mc10_tlin,./slurm_scripts/run.BATCH,MaxCut,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
 mc20_tlin,./slurm_scripts/run.BATCH,MaxCut,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
+mc30_tlin,./slurm_scripts/run.BATCH,MaxCut,100,30,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
+mc40_tlin,./slurm_scripts/run.BATCH,MaxCut,100,40,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
 mc50_tlin,./slurm_scripts/run.BATCH,MaxCut,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,linear,False,temp_linear
-
-# Temperature annealing - linear schedule, inversed
-is3_ilin,./slurm_scripts/run.BATCH,MIS,100,3,ProductQUBOLoss,,SigmoidTempAnnealing,linear,True,temp_linear_inv
-is5_ilin,./slurm_scripts/run.BATCH,MIS,100,5,ProductQUBOLoss,,SigmoidTempAnnealing,linear,True,temp_linear_inv
-is10_ilin,./slurm_scripts/run.BATCH,MIS,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,linear,True,temp_linear_inv
-is20_ilin,./slurm_scripts/run.BATCH,MIS,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,linear,True,temp_linear_inv
-is50_ilin,./slurm_scripts/run.BATCH,MIS,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,linear,True,temp_linear_inv
-
-mc3_ilin,./slurm_scripts/run.BATCH,MaxCut,100,3,ProductQUBOLoss,,SigmoidTempAnnealing,linear,True,temp_linear_inv
-mc5_ilin,./slurm_scripts/run.BATCH,MaxCut,100,5,ProductQUBOLoss,,SigmoidTempAnnealing,linear,True,temp_linear_inv
-mc10_ilin,./slurm_scripts/run.BATCH,MaxCut,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,linear,True,temp_linear_inv
-mc20_ilin,./slurm_scripts/run.BATCH,MaxCut,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,linear,True,temp_linear_inv
-mc50_ilin,./slurm_scripts/run.BATCH,MaxCut,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,linear,True,temp_linear_inv
 
 # Temperature annealing - logarithmic schedule
 is3_tlog,./slurm_scripts/run.BATCH,MIS,100,3,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
 is5_tlog,./slurm_scripts/run.BATCH,MIS,100,5,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
 is10_tlog,./slurm_scripts/run.BATCH,MIS,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
 is20_tlog,./slurm_scripts/run.BATCH,MIS,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
+is30_tlog,./slurm_scripts/run.BATCH,MIS,100,30,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
+is40_tlog,./slurm_scripts/run.BATCH,MIS,100,40,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
 is50_tlog,./slurm_scripts/run.BATCH,MIS,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
 
 mc3_tlog,./slurm_scripts/run.BATCH,MaxCut,100,3,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
 mc5_tlog,./slurm_scripts/run.BATCH,MaxCut,100,5,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
 mc10_tlog,./slurm_scripts/run.BATCH,MaxCut,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
 mc20_tlog,./slurm_scripts/run.BATCH,MaxCut,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
+mc30_tlog,./slurm_scripts/run.BATCH,MaxCut,100,30,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
+mc40_tlog,./slurm_scripts/run.BATCH,MaxCut,100,40,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
 mc50_tlog,./slurm_scripts/run.BATCH,MaxCut,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,False,temp_logarithmic
-
-# Temperature annealing - logarithmic schedule, inversed
-is3_ilog,./slurm_scripts/run.BATCH,MIS,100,3,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,True,temp_logarithmic_inv
-is5_ilog,./slurm_scripts/run.BATCH,MIS,100,5,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,True,temp_logarithmic_inv
-is10_ilog,./slurm_scripts/run.BATCH,MIS,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,True,temp_logarithmic_inv
-is20_ilog,./slurm_scripts/run.BATCH,MIS,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,True,temp_logarithmic_inv
-is50_ilog,./slurm_scripts/run.BATCH,MIS,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,True,temp_logarithmic_inv
-
-mc3_ilog,./slurm_scripts/run.BATCH,MaxCut,100,3,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,True,temp_logarithmic_inv
-mc5_ilog,./slurm_scripts/run.BATCH,MaxCut,100,5,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,True,temp_logarithmic_inv
-mc10_ilog,./slurm_scripts/run.BATCH,MaxCut,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,True,temp_logarithmic_inv
-mc20_ilog,./slurm_scripts/run.BATCH,MaxCut,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,True,temp_logarithmic_inv
-mc50_ilog,./slurm_scripts/run.BATCH,MaxCut,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,logarithmic,True,temp_logarithmic_inv
 
 # Temperature annealing - geometric schedule
 is3_tgeo,./slurm_scripts/run.BATCH,MIS,100,3,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
 is5_tgeo,./slurm_scripts/run.BATCH,MIS,100,5,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
 is10_tgeo,./slurm_scripts/run.BATCH,MIS,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
 is20_tgeo,./slurm_scripts/run.BATCH,MIS,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
+is30_tgeo,./slurm_scripts/run.BATCH,MIS,100,30,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
+is40_tgeo,./slurm_scripts/run.BATCH,MIS,100,40,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
 is50_tgeo,./slurm_scripts/run.BATCH,MIS,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
 
 mc3_tgeo,./slurm_scripts/run.BATCH,MaxCut,100,3,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
 mc5_tgeo,./slurm_scripts/run.BATCH,MaxCut,100,5,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
 mc10_tgeo,./slurm_scripts/run.BATCH,MaxCut,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
 mc20_tgeo,./slurm_scripts/run.BATCH,MaxCut,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
+mc30_tgeo,./slurm_scripts/run.BATCH,MaxCut,100,30,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
+mc40_tgeo,./slurm_scripts/run.BATCH,MaxCut,100,40,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
 mc50_tgeo,./slurm_scripts/run.BATCH,MaxCut,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,False,temp_geometric
-
-# Temperature annealing - geometric schedule, inversed
-is3_igeo,./slurm_scripts/run.BATCH,MIS,100,3,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
-is5_igeo,./slurm_scripts/run.BATCH,MIS,100,5,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
-is10_igeo,./slurm_scripts/run.BATCH,MIS,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
-is20_igeo,./slurm_scripts/run.BATCH,MIS,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
-is50_igeo,./slurm_scripts/run.BATCH,MIS,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
-
-mc3_igeo,./slurm_scripts/run.BATCH,MaxCut,100,3,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
-mc5_igeo,./slurm_scripts/run.BATCH,MaxCut,100,5,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
-mc10_igeo,./slurm_scripts/run.BATCH,MaxCut,100,10,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
-mc20_igeo,./slurm_scripts/run.BATCH,MaxCut,100,20,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
-mc50_igeo,./slurm_scripts/run.BATCH,MaxCut,100,50,ProductQUBOLoss,,SigmoidTempAnnealing,geometric,True,temp_geometric_inv
 
 # END
